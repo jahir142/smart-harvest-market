@@ -71,7 +71,29 @@ Configure your Gemini API key via one of the following methods:
 | `static/` | Static assets (CSS, JavaScript, images) |
 
 ---
+## 🛠️ Tech Stack & Technologies Used
 
+- **Backend:** Python 3, Flask
+- **Database:** MySQL (phpMyAdmin / XAMPP)
+- **AI Integration:** Google Gemini API (AI Shopping Assistant)
+- **Frontend:** HTML5, CSS3, JavaScript (Vanilla CSS, Dynamic Animations)
+- **Authentication:** Role-Based Access Control (Admin & Customer Sessions)
+
+---
+
+## 👨‍💻 Author
+
+- **Developer:** Jahir ([@jahir142](https://github.com/jahir142))
+- **GitHub:** [https://github.com/jahir142](https://github.com/jahir142)
+- **Project:** [Smart Harvest Market](https://github.com/jahir142/smart-harvest-market)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - feel free to use and modify it.
+
+---
 ## 🛠️ Troubleshooting
 
 | Issue | Solution |
