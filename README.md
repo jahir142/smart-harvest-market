@@ -89,11 +89,6 @@ Configure your Gemini API key via one of the following methods:
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License - feel free to use and modify it.
-
----
 ## 🛠️ Troubleshooting
 
 | Issue | Solution |
