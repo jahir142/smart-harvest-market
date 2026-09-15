@@ -1,0 +1,385 @@
+{% extends "layout.html" %}
+{% block title %}Place Order{% endblock %}
+
+{% block extra_css %}
+<style>
+.order-page {
+  max-width: 1000px;
+  margin: 36px auto;
+  padding: 0 5% 60px;
+}
+.order-wrap {
+  display: flex; gap: 32px; flex-wrap: wrap;
+}
+/* Product preview */
+.order-preview {
+  flex: 1; min-width: 260px;
+}
+.order-preview-card {
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  overflow: hidden; position: sticky; top: 90px;
+}
+.order-preview-img {
+  width: 100%; height: 260px;
+  object-fit: cover;
+  background: var(--green-light);
+}
+.order-preview-body { padding: 20px; }
+.order-preview-name { font-size: 2rem; font-weight: 800; color: var(--green-dark); }
+.order-preview-price {
+  font-size: 2.8rem; font-weight: 800;
+  color: var(--green); margin: 8px 0;
+}
+
+/* Form */
+.order-form-col { flex: 1.4; min-width: 300px; }
+.order-section {
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+  padding: 24px; margin-bottom: 18px;
+}
+.order-section h3 {
+  font-size: 1.7rem; font-weight: 800;
+  color: var(--green-dark); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--border);
+}
+
+/* Weight buttons */
+.weight-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.w-btn {
+  padding: 9px 20px; border: 2px solid var(--border);
+  border-radius: 25px; background: #fff;
+  font-size: 1.4rem; font-weight: 700;
+  color: var(--text); cursor: pointer; transition: 0.2s;
+}
+.w-btn:hover { border-color: var(--green); color: var(--green); }
+.w-btn.active {
+  background: var(--green); color: #fff;
+  border-color: var(--green);
+  box-shadow: 0 4px 12px rgba(26,122,74,0.3);
+}
+
+/* Count input (eggs) */
+.count-row { display: flex; align-items: center; gap: 12px; }
+.count-ctrl {
+  display: flex; align-items: center;
+  border: 2px solid var(--border); border-radius: 10px; overflow: hidden;
+}
+.count-ctrl button {
+  width: 38px; height: 38px; background: var(--green-light);
+  border: none; font-size: 1.8rem; color: var(--green-dark);
+  cursor: pointer;
+}
+.count-ctrl button:hover { background: var(--green); color: #fff; }
+.count-ctrl input {
+  width: 60px; border: none; text-align: center;
+  font-size: 1.6rem; font-weight: 700; outline: none;
+}
+.count-label { font-size: 1.4rem; color: var(--text-light); }
+
+/* Form inputs */
+.order-input {
+  width: 100%; padding: 12px 16px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-size: 1.4rem; margin: 6px 0;
+  outline: none; font-family: inherit; transition: border 0.2s;
+}
+.order-input:focus { border-color: var(--green); }
+textarea.order-input { resize: vertical; min-height: 80px; }
+
+/* COD box */
+.cod-box {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--green-light);
+  border: 2px solid var(--green);
+  border-radius: 12px; padding: 16px 20px;
+}
+.cod-box i { font-size: 2.8rem; color: var(--green); }
+.cod-box .cod-name { font-size: 1.6rem; font-weight: 800; color: var(--green-dark); }
+.cod-box .cod-sub  { font-size: 1.3rem; color: var(--text-light); }
+
+/* Order button */
+.order-btn-main {
+  width: 100%; background: var(--green); color: #fff;
+  border: none; padding: 16px; border-radius: 12px;
+  font-size: 1.8rem; font-weight: 800; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: 0.2s; box-shadow: 0 6px 20px rgba(26,122,74,0.3);
+}
+.order-btn-main:hover { background: var(--green-dark); transform: translateY(-2px); }
+
+/* Success overlay */
+.order-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: none; align-items: center; justify-content: center; z-index: 9999;
+}
+.order-overlay.show { display: flex; }
+.order-popup {
+  background: #fff; border-radius: 20px; padding: 32px;
+  max-width: 400px; width: 90%; text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: popIn .4s ease;
+  position: relative;
+}
+@keyframes popIn { from{transform:scale(.85);opacity:0;} to{transform:scale(1);opacity:1;} }
+.popup-close { position:absolute;top:12px;right:16px;font-size:2.4rem;background:none;border:none;color:#aaa;cursor:pointer; }
+.popup-close:hover { color: #ef4444; }
+.popup-check {
+  width: 70px; height: 70px;
+  background: var(--green); border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.popup-check i { font-size: 3rem; color: #fff; }
+.popup-title { font-size: 2.2rem; font-weight: 800; color: var(--green-dark); margin-bottom: 8px; }
+.popup-row { display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--border);font-size:1.4rem; }
+.popup-row:last-of-type { border-bottom:none; }
+.popup-total { font-size:2rem;font-weight:800;color:var(--green-dark); }
+.popup-ok {
+  width: 100%; background: var(--green); color: #fff;
+  border: none; padding: 13px; border-radius: 10px;
+  font-size: 1.5rem; font-weight: 700; cursor: pointer; margin-top: 16px;
+}
+
+@media(max-width:768px) {
+  .order-preview { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-page">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;flex-wrap:wrap;">
+    <button onclick="history.back()"
+      style="background:var(--green-light);border:none;padding:9px 18px;border-radius:25px;
+             font-size:1.4rem;font-weight:700;color:var(--green-dark);cursor:pointer;
+             display:flex;align-items:center;gap:7px;">
+      <i class="fa fa-arrow-left"></i> Back
+    </button>
+    <h1 style="font-size:2.4rem;font-weight:800;color:var(--green-dark);">Place Your Order</h1>
+    <a href="/history" style="margin-left:auto;display:flex;align-items:center;gap:6px;
+                                font-size:1.3rem;color:var(--green);font-weight:700;text-decoration:none;">
+      <i class="fa fa-clock-rotate-left"></i> Order History
+    </a>
+  </div>
+
+  <div class="order-wrap">
+
+    <!-- Product preview -->
+    <div class="order-preview">
+      <div class="order-preview-card">
+        <img class="order-preview-img" id="productImage" src="" alt="">
+        <div class="order-preview-body">
+          <div class="order-preview-name" id="productName">Loading...</div>
+          <div class="order-preview-price">₹ <span id="price">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="order-form-col">
+
+      <!-- Weight / Count -->
+      <div class="order-section" id="weightSection">
+        <h3><i class="fa fa-weight-hanging"></i> <span id="weightLabel">Select Weight</span></h3>
+        <div class="weight-btns" id="weightBtns">
+          <button class="w-btn active" data-mult="1">0.5 Kg</button>
+          <button class="w-btn" data-mult="2">1 Kg</button>
+          <button class="w-btn" data-mult="3">1.5 Kg</button>
+          <button class="w-btn" data-mult="4">2 Kg</button>
+          <button class="w-btn" data-mult="5">5 Kg</button>
+        </div>
+        <!-- Count (for eggs/pieces) -->
+        <div id="countRow" class="count-row" style="display:none;">
+          <div class="count-ctrl">
+            <button type="button" onclick="adjustCount(-1)">−</button>
+            <input type="number" id="eggCount" value="6" min="1">
+            <button type="button" onclick="adjustCount(1)">+</button>
+          </div>
+          <span class="count-label">pieces</span>
+        </div>
+      </div>
+
+      <!-- Quantity -->
+      <div class="order-section" id="qtySection">
+        <h3><i class="fa fa-hashtag"></i> Quantity</h3>
+        <div class="count-row">
+          <div class="count-ctrl">
+            <button type="button" onclick="adjustQty(-1)">−</button>
+            <input type="number" id="qty" value="1" min="1">
+            <button type="button" onclick="adjustQty(1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- User details -->
+      <div class="order-section">
+        <h3><i class="fa fa-user"></i> Your Details</h3>
+        <input class="order-input" type="text"  id="custName"    placeholder="Full Name *"    required>
+        <input class="order-input" type="tel"   id="custPhone"   placeholder="Phone Number *" required>
+        <input class="order-input" type="email" id="custEmail"   placeholder="Email Address">
+        <textarea class="order-input"            id="custAddress" rows="2"
+                  placeholder="Delivery Address * (Door No, Street, Area, City)" required></textarea>
+        <textarea class="order-input"            id="custNote"    rows="2"
+                  placeholder="Special Instructions (optional)"></textarea>
+      </div>
+
+      <!-- Payment -->
+      <div class="order-section">
+        <h3><i class="fa fa-credit-card"></i> Payment Method</h3>
+        <div class="cod-box">
+          <i class="fa fa-money-bill-wave"></i>
+          <div>
+            <div class="cod-name">Cash on Delivery</div>
+            <div class="cod-sub">Pay when your order arrives at your door</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Place order -->
+      <button class="order-btn-main" id="buyNow">
+        <i class="fa fa-bag-shopping"></i> ORDER NOW
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<!-- Success Popup -->
+<div class="order-overlay" id="customAlert">
+  <div class="order-popup">
+    <button class="popup-close" id="closeAlert">&times;</button>
+    <div class="popup-check"><i class="fa fa-check"></i></div>
+    <div class="popup-title">Order Confirmed!</div>
+    <div style="margin:16px 0;">
+      <div class="popup-row"><span>Product</span><b id="alertName"></b></div>
+      <div class="popup-row"><span>Weight/Count</span><b id="alertWeight"></b></div>
+      <div class="popup-row"><span>Quantity</span><b id="alertQty"></b></div>
+      <div class="popup-row"><span>Payment</span><b>Cash on Delivery</b></div>
+      <div class="popup-row"><span>Name</span><b id="aName"></b></div>
+      <div class="popup-row"><span>Phone</span><b id="aPhone"></b></div>
+      <div class="popup-row"><span>Address</span><b id="aAddress" style="font-size:1.2rem;"></b></div>
+    </div>
+    <div class="popup-total">₹ <span id="alertPrice"></span></div>
+    <button class="popup-ok" id="okAlert">Done!</button>
+  </div>
+</div>
+
+<script>
+const sel = JSON.parse(localStorage.getItem('selectedProduct') || '{"name":"Product","price":"0","image":""}');
+const isPiece = (sel.unit === 'piece') || sel.name.toLowerCase().includes('egg');
+
+document.getElementById('productImage').src      = sel.image || '';
+document.getElementById('productName').innerText = sel.name  || 'Product';
+
+let base = parseFloat(sel.price) || 0;
+let mult = 1;
+let placed = false;
+
+const priceEl = document.getElementById('price');
+const qtyInp  = document.getElementById('qty');
+
+// Switch to count mode for pieces
+if (isPiece) {
+  document.getElementById('weightBtns').style.display = 'none';
+  document.getElementById('countRow').style.display   = 'flex';
+  document.getElementById('weightLabel').textContent  = 'Count';
+  document.getElementById('qtySection').style.display = 'none';
+}
+
+function calcTotal() {
+  if (isPiece) {
+    return base * (parseInt(document.getElementById('eggCount').value) || 1);
+  }
+  return base * mult * (parseInt(qtyInp.value) || 1);
+}
+function refreshPrice() { priceEl.innerText = calcTotal().toFixed(2); }
+refreshPrice();
+
+qtyInp.addEventListener('input', refreshPrice);
+document.getElementById('eggCount').addEventListener('input', refreshPrice);
+
+document.querySelectorAll('.w-btn').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.w-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    mult = parseInt(b.dataset.mult);
+    refreshPrice();
+  };
+});
+
+function adjustCount(d) {
+  const inp = document.getElementById('eggCount');
+  inp.value = Math.max(1, (parseInt(inp.value)||1) + d);
+  refreshPrice();
+}
+function adjustQty(d) {
+  qtyInp.value = Math.max(1, (parseInt(qtyInp.value)||1) + d);
+  refreshPrice();
+}
+
+document.getElementById('buyNow').onclick = () => {
+  if (placed) return;
+  const name    = document.getElementById('custName').value.trim();
+  const phone   = document.getElementById('custPhone').value.trim();
+  const address = document.getElementById('custAddress').value.trim();
+  if (!name || !phone || !address) { alert('Please enter your Name, Phone and Delivery Address.'); return; }
+
+  const weightText = isPiece
+    ? (document.getElementById('eggCount').value + ' pieces')
+    : (document.querySelector('.w-btn.active')?.innerText || '0.5 Kg');
+  const qty = isPiece
+    ? document.getElementById('eggCount').value
+    : (qtyInp.value || 1);
+  const total = calcTotal().toFixed(2);
+
+  const order = {
+    product:  sel.name,
+    weight:   weightText,
+    quantity: qty,
+    payment:  'Cash on Delivery',
+    price:    total,
+    name:     name,
+    email:    document.getElementById('custEmail').value || '-',
+    phone:    phone,
+    address:  address,
+    note:     document.getElementById('custNote').value  || '-',
+    image:    sel.image || '',
+    date:     new Date().toLocaleString('en-IN')
+  };
+
+  // Save to history
+  const hist = JSON.parse(localStorage.getItem('orderHistory')||'[]');
+  hist.unshift(order);
+  localStorage.setItem('orderHistory', JSON.stringify(hist));
+  localStorage.removeItem('selectedProduct');
+
+  // Popup
+  document.getElementById('alertName').innerText   = order.product;
+  document.getElementById('alertWeight').innerText = order.weight;
+  document.getElementById('alertQty').innerText    = order.quantity;
+  document.getElementById('alertPrice').innerText  = order.price;
+  document.getElementById('aName').innerText       = order.name;
+  document.getElementById('aPhone').innerText      = order.phone;
+  document.getElementById('aAddress').innerText    = order.address;
+  document.getElementById('customAlert').classList.add('show');
+
+  // Send to backend
+  fetch('/place_order', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(order)
+  }).catch(()=>{});
+
+  placed = true;
+};
+
+document.getElementById('okAlert').onclick    = goSuccess;
+document.getElementById('closeAlert').onclick = goSuccess;
+function goSuccess() {
+  document.getElementById('customAlert').classList.remove('show');
+  window.location.href = '/order_success';
+}
+</script>
+{% endblock %}

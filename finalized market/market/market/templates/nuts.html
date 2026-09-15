@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% block title %}Nuts & Dry Fruits{% endblock %}
+
+{% block content %}
+<div class="cat-hero">
+  <div class="cat-hero-text">
+    <h1>Nuts &amp; <span>Dry Fruits</span></h1>
+    <p>Premium quality nuts and dry fruits — healthy and nutritious.</p>
+    <span class="cat-hero-badge"><i class="fa fa-heart"></i> High in Protein</span>
+  </div>
+  <img class="cat-hero-img" src="{{ url_for('static', filename='images/3.jpeg') }}" alt="Nuts">
+</div>
+
+<div class="cat-toolbar">
+  <button class="cat-filter-btn active" onclick="filterItems('all',this)"><i class="fa fa-border-all"></i> All</button>
+  <button class="cat-filter-btn" onclick="filterItems('nuts',this)">Nuts</button>
+  <button class="cat-filter-btn" onclick="filterItems('dryfruits',this)">Dry Fruits</button>
+  <span class="cat-result-count" id="resultCount"></span>
+</div>
+
+<div class="cat-grid">
+  {% set items = [
+    {"name":"Hazelnut",      "price":"220","unit":"per 100g","img":"/static/images/nuts/hazelnut.jpg",      "cat":"nuts"},
+    {"name":"Pista",         "price":"300","unit":"per 100g","img":"/static/images/nuts/nuts2.jpg",         "cat":"nuts"},
+    {"name":"Pine Nut",      "price":"180","unit":"per 100g","img":"/static/images/nuts/pine_nut.jpg",      "cat":"nuts"},
+    {"name":"Walnuts",       "price":"160","unit":"per 100g","img":"/static/images/nuts/nuts4.jpg",         "cat":"nuts"},
+    {"name":"Almonds",       "price":"240","unit":"per 100g","img":"/static/images/nuts/nuts9.jpg",         "cat":"nuts"},
+    {"name":"Cashews",       "price":"280","unit":"per 100g","img":"/static/images/nuts/nuts6.jpg",         "cat":"nuts"},
+    {"name":"Dates",         "price":"120","unit":"per 100g","img":"/static/images/nuts/dates.jpg",         "cat":"dryfruits"},
+    {"name":"Raisins",       "price":"90", "unit":"per 100g","img":"/static/images/nuts/raisins.jpg",       "cat":"dryfruits"},
+    {"name":"Apricot",       "price":"140","unit":"per 100g","img":"/static/images/nuts/apricot.jpg",       "cat":"dryfruits"},
+    {"name":"Groundnut",     "price":"60", "unit":"per 250g","img":"/static/images/nuts/nuts5.jpg",         "cat":"nuts"},
+    {"name":"Pumpkin Seeds", "price":"110","unit":"per 100g","img":"/static/images/nuts/pumpkin_seeds.jpg", "cat":"nuts"},
+    {"name":"Figs",          "price":"160","unit":"per 100g","img":"/static/images/nuts/figs.jpg",          "cat":"dryfruits"},
+    {"name":"Mixed Nuts",    "price":"200","unit":"per 100g","img":"/static/images/nuts/nuts1.jpg",         "cat":"nuts"},
+  ] %}
+  {% for item in items %}
+  <div class="pcard" data-cat="{{ item.cat }}">
+    <div class="pcard-img-wrap">
+      <img src="{{ item.img }}" alt="{{ item.name }}"
+           onerror="this.src='/static/images/3.jpeg'">
+      <span class="pcard-badge">{% if item.cat=='nuts' %}Nut{% else %}Dry Fruit{% endif %}</span>
+    </div>
+    <div class="pcard-body">
+      <div class="pcard-name">{{ item.name }}</div>
+      <div class="pcard-unit">{{ item.unit }}</div>
+      <div class="pcard-price" data-item="{{ item.name }}">₹{{ item.price }}</div>
+      <div class="pcard-qty"><label>Qty:</label>
+        <div class="qty-ctrl">
+          <button type="button" onclick="changeQty(this,-1)">−</button>
+          <input type="number" value="1" min="1" class="qty-input">
+          <button type="button" onclick="changeQty(this,1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="pcard-actions">
+      <button class="pcard-btn-cart add-cart-btn" data-name="{{ item.name }}" data-price="{{ item.price }}" data-image="{{ item.img }}"><i class="fa fa-cart-plus"></i> Add</button>
+      <button class="pcard-btn-order order-btn" data-name="{{ item.name }}" data-price="{{ item.price }}" data-image="{{ item.img }}">Order</button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function changeQty(btn,delta){const i=btn.parentElement.querySelector('input');i.value=Math.max(1,parseInt(i.value||1)+delta);}
+function filterItems(cat,btn){document.querySelectorAll('.cat-filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');let c=0;document.querySelectorAll('.pcard').forEach(card=>{const s=cat==='all'||card.dataset.cat===cat;card.style.display=s?'':'none';if(s)c++;});document.getElementById('resultCount').textContent=c+' products';}
+window.addEventListener('DOMContentLoaded',()=>{document.getElementById('resultCount').textContent=document.querySelectorAll('.pcard').length+' products';});
+</script>
+{% endblock %}

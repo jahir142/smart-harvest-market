@@ -1,0 +1,126 @@
+{% extends "layout.html" %}
+{% block title %}Groceries{% endblock %}
+
+{% block content %}
+
+<div class="cat-hero">
+  <div class="cat-hero-text">
+    <h1>Daily <span>Groceries</span></h1>
+    <p>Milk, Rice, Fruits, Soaps and all your daily essentials in one place.</p>
+    <span class="cat-hero-badge"><i class="fa fa-basket-shopping"></i> Daily Essentials</span>
+  </div>
+  <img class="cat-hero-img"
+       src="{{ url_for('static', filename='images/7.jpeg') }}"
+       alt="Groceries">
+</div>
+
+<div class="cat-toolbar">
+  <button class="cat-filter-btn active" onclick="filterItems('all',this)">
+    <i class="fa fa-border-all"></i> All
+  </button>
+  <button class="cat-filter-btn" onclick="filterItems('dairy',this)">
+    <i class="fa fa-droplet"></i> Dairy
+  </button>
+  <button class="cat-filter-btn" onclick="filterItems('grains',this)">
+    <i class="fa fa-wheat-awn"></i> Grains
+  </button>
+  <button class="cat-filter-btn" onclick="filterItems('fruits',this)">
+    <i class="fa fa-apple-whole"></i> Fruits
+  </button>
+  <button class="cat-filter-btn" onclick="filterItems('soap',this)">
+    <i class="fa fa-soap"></i> Soap &amp; Care
+  </button>
+  <button class="cat-filter-btn" onclick="filterItems('snacks',this)">
+    <i class="fa fa-cookie-bite"></i> Snacks
+  </button>
+  <span class="cat-result-count" id="resultCount"></span>
+</div>
+
+<div class="cat-grid" id="prodGrid">
+
+  {% set items = [
+    {"name":"Fresh Milk",      "price":"60",  "unit":"per litre",  "img":"/static/images/groceries/milk.jpg",            "cat":"dairy",  "rating":4.5},
+    {"name":"Curd",            "price":"35",  "unit":"500g",       "img":"/static/images/groceries/curd.jpg",            "cat":"dairy",  "rating":4.3},
+    {"name":"Paneer",          "price":"80",  "unit":"200g",       "img":"/static/images/groceries/paneer.jpg",          "cat":"dairy",  "rating":4.4},
+    {"name":"Butter",          "price":"55",  "unit":"100g",       "img":"/static/images/groceries/butter.jpg",          "cat":"dairy",  "rating":4.2},
+    {"name":"Rice",            "price":"55",  "unit":"per kg",     "img":"/static/images/groceries/rice.jpg",            "cat":"grains", "rating":4.6},
+    {"name":"Wheat Flour",     "price":"42",  "unit":"per kg",     "img":"/static/images/groceries/wheat_flour.jpg",     "cat":"grains", "rating":4.3},
+    {"name":"Toor Dal",        "price":"140", "unit":"per kg",     "img":"/static/images/groceries/toor_dal.jpg",        "cat":"grains", "rating":4.5},
+    {"name":"Banana",          "price":"40",  "unit":"per dozen",  "img":"/static/images/groceries/banana.jpg",          "cat":"fruits", "rating":4.4},
+    {"name":"Apple",           "price":"180", "unit":"per kg",     "img":"/static/images/groceries/apple.jpg",           "cat":"fruits", "rating":4.6},
+    {"name":"Mango",           "price":"120", "unit":"per kg",     "img":"/static/images/groceries/mango.jpg",           "cat":"fruits", "rating":4.8},
+    {"name":"Grapes",          "price":"90",  "unit":"per kg",     "img":"/static/images/groceries/grapes.jpg",          "cat":"fruits", "rating":4.2},
+    {"name":"Bath Soap",       "price":"25",  "unit":"per piece",  "img":"/static/images/groceries/bath_soap.jpg",       "cat":"soap",   "rating":4.0},
+    {"name":"Washing Powder",  "price":"60",  "unit":"500g",       "img":"/static/images/groceries/washing_powder.jpg",  "cat":"soap",   "rating":4.1},
+    {"name":"Shampoo",         "price":"120", "unit":"200ml",      "img":"/static/images/groceries/shampoo.jpg",         "cat":"soap",   "rating":4.3},
+    {"name":"Biscuits",        "price":"20",  "unit":"per pack",   "img":"/static/images/groceries/biscuits.jpg",        "cat":"snacks", "rating":4.2},
+    {"name":"Chips",           "price":"30",  "unit":"per pack",   "img":"/static/images/groceries/chips.jpg",           "cat":"snacks", "rating":4.0},
+    {"name":"Noodles",         "price":"15",  "unit":"per pack",   "img":"/static/images/groceries/noodles.jpg",         "cat":"snacks", "rating":3.9},
+  ] %}
+
+  {% for item in items %}
+  <div class="pcard" data-cat="{{ item.cat }}">
+    <div class="pcard-img-wrap">
+      <img src="{{ item.img }}"
+           alt="{{ item.name }}"
+           onerror="this.src='/static/images/7.jpeg'">
+      <span class="pcard-badge">{{ item.cat|capitalize }}</span>
+    </div>
+    <div class="pcard-body">
+      <div class="pcard-name">{{ item.name }}</div>
+      <div class="pcard-unit">{{ item.unit }}</div>
+      <div class="pcard-price" data-item="{{ item.name }}">₹{{ item.price }}</div>
+      <div class="pcard-rating">
+        <span class="stars">{% for i in range(5) %}{% if i < item.rating|int %}★{% else %}☆{% endif %}{% endfor %}</span>
+        <span class="cnt">({{ (item.rating * 18)|int }})</span>
+      </div>
+      <div class="pcard-qty">
+        <label>Qty:</label>
+        <div class="qty-ctrl">
+          <button type="button" onclick="changeQty(this,-1)">−</button>
+          <input type="number" value="1" min="1" class="qty-input">
+          <button type="button" onclick="changeQty(this,1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="pcard-actions">
+      <button class="pcard-btn-cart add-cart-btn"
+              data-name="{{ item.name }}" data-price="{{ item.price }}"
+              data-image="{{ item.img }}">
+        <i class="fa fa-cart-plus"></i> Add
+      </button>
+      <button class="pcard-btn-order order-btn"
+              data-name="{{ item.name }}" data-price="{{ item.price }}"
+              data-image="{{ item.img }}">
+        Order
+      </button>
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changeQty(btn, delta) {
+  const input = btn.parentElement.querySelector('input');
+  input.value = Math.max(1, parseInt(input.value||1) + delta);
+}
+function filterItems(cat, btn) {
+  document.querySelectorAll('.cat-filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  let count = 0;
+  document.querySelectorAll('.pcard').forEach(card=>{
+    const show = cat==='all' || card.dataset.cat===cat;
+    card.style.display = show ? '' : 'none';
+    if(show) count++;
+  });
+  document.getElementById('resultCount').textContent = count + ' products';
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('resultCount').textContent = document.querySelectorAll('.pcard').length + ' products';
+});
+</script>
+{% endblock %}

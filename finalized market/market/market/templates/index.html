@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market — Fresh & Healthy</title>
+<link rel="icon" href="{{ url_for('static', filename='images/cake-img/logo.jpg') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='chatbot.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+<!-- ── TOP BAR ── -->
+<div class="top-bar">
+  <div class="top-bar-left">
+    <i class="fa fa-truck-fast"></i>
+    <span>Free Delivery on Orders Above ₹499</span>
+  </div>
+  <div class="top-bar-right contact-info">
+    <a href="tel:+919876543210"><i class="fa fa-phone"></i> +91 98765 43210</a>
+    <span class="sep">|</span>
+    <a href="mailto:support@market.com"><i class="fa fa-envelope"></i> support@market.com</a>
+    <span class="sep">|</span>
+    <span>Follow us:</span>
+    <div class="social-icons">
+      <a href="https://wa.me/919500920199" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN HEADER ── -->
+<header class="main-header" id="mainHeader">
+
+  <!-- Logo -->
+  <a class="logo-block" href="/">
+    <img src="{{ url_for('static', filename='images/cake-img/logo.jpg') }}" alt="Market Logo">
+    <div class="logo-text">
+      <div class="brand">MARKET</div>
+      <div class="tagline">Fresh &amp; Healthy</div>
+    </div>
+  </a>
+
+  <!-- Desktop Nav -->
+  <nav class="main-nav" id="mainNav">
+    <a href="/" class="active">Home</a>
+    <a href="/vegetables">Vegetables</a>
+    <a href="/groceries">Groceries</a>
+    <a href="#specials">Specials</a>
+    <a href="#new-arrivals">New Arrivals</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <!-- Search -->
+  <div class="header-search" id="headerSearch">
+    <i class="fa fa-magnifying-glass search-icon"></i>
+    <input type="text" id="searchInput" placeholder="Search Products..."
+           autocomplete="off"
+           oninput="handleSearch(this.value)"
+           onkeydown="if(event.key==='Enter') doSearch()">
+    <i class="fa fa-xmark search-icon" id="clearBtn" style="display:none;cursor:pointer;" onclick="clearSearch()"></i>
+    <div class="search-dropdown" id="searchDropdown"></div>
+  </div>
+
+  <!-- Cart -->
+  <a href="/cart">
+    <button class="cart-icon-btn" id="cartHeaderBtn" title="Cart">
+      <i class="fa fa-cart-shopping"></i>
+      <span class="cart-count" id="headerCartCount" style="display:none;">0</span>
+    </button>
+  </a>
+
+  <!-- User / Login -->
+  {% if session.get('user') %}
+  <div class="user-bar">
+    <span class="username-tag"><i class="fa fa-user"></i> {{ session['user'] }}</span>
+    <a href="/logout"><button class="login-btn logout">Logout</button></a>
+  </div>
+  {% elif session.get('admin') %}
+  <div class="user-bar">
+    <span class="username-tag" style="color:#6c3de8;"><i class="fa fa-shield-halved"></i> Admin</span>
+    <a href="/admin"><button class="login-btn">Dashboard</button></a>
+    <a href="/admin/logout"><button class="login-btn logout">Logout</button></a>
+  </div>
+  {% else %}
+  <a href="/login"><button class="login-btn">Login</button></a>
+  {% endif %}
+
+  <!-- Hamburger -->
+  <button class="hamburger" id="hamburger" onclick="openMobileNav()">
+    <i class="fa fa-bars"></i>
+  </button>
+
+</header>
+
+<!-- Mobile Nav Drawer -->
+<div class="mobile-nav-overlay" id="mobileOverlay" onclick="closeMobileNav()"></div>
+<nav class="mobile-nav" id="mobileNav">
+  <button class="mobile-nav-close" onclick="closeMobileNav()">&times;</button>
+  <a href="/">Home</a>
+  <a href="/vegetables">Vegetables</a>
+  <a href="/groceries">Groceries</a>
+  <a href="#specials">Specials</a>
+  <a href="#new-arrivals">New Arrivals</a>
+  <a href="#about">About</a>
+  <a href="#contact">Contact</a>
+  <a href="/compare" style="color:#6c3de8;"><i class="fa fa-robot"></i> AI Compare</a>
+  {% if session.get('user') %}
+  <a href="/logout" style="color:#e53935;">Logout ({{ session['user'] }})</a>
+  {% else %}
+  <a href="/login">Login</a>
+  {% endif %}
+</nav>
+
+<!-- ── HERO SECTION ── -->
+<section class="hero-section" id="home">
+  <div class="hero-text">
+    <div class="hero-sub"><i class="fa fa-leaf"></i> 100% Fresh &amp; Organic</div>
+    <h1>Fresh Vegetables<br><span>Healthy Life</span></h1>
+    <p>Get the freshest vegetables &amp; groceries delivered to your doorstep.</p>
+    <a href="/vegetables" class="hero-btn">Shop Now <i class="fa fa-arrow-right"></i></a>
+  </div>
+  <div class="hero-img">
+    <img src="/static/images/1.jpeg" alt="Fresh Vegetables">
+  </div>
+  <div class="hero-dots">
+    <span class="active"></span>
+    <span></span>
+    <span></span>
+  </div>
+</section>
+
+<!-- ── CATEGORIES ── -->
+<section class="categories-section" id="categories">
+  <div class="section-title">
+    <h2>Our <span>Categories</span></h2>
+    <div class="title-line"></div>
+  </div>
+  <div class="categories-grid">
+
+    <div class="cat-card" onclick="location.href='/compare'"
+         style="border:2px solid #a855f7;background:linear-gradient(135deg,#faf5ff,#f3e8ff);">
+      <div class="cat-img-wrap" style="background:linear-gradient(135deg,#ede9ff,#d8ccff);">
+        <i class="fa fa-robot" style="font-size:4rem;color:#6c3de8;"></i>
+      </div>
+      <h3 style="color:#4c1d95;">AI Compare</h3>
+      <p>Best Price Finder</p>
+      <a href="/compare" class="cat-btn" style="background:#6c3de8;">Compare <i class="fa fa-robot"></i></a>
+    </div>
+
+    <div class="cat-card" onclick="location.href='/vegetables'">
+      <div class="cat-img-wrap">
+        <img src="/static/images/1.jpeg" alt="Vegetables">
+      </div>
+      <h3>Vegetables</h3>
+      <p>Fresh &amp; Organic</p>
+      <a href="/vegetables" class="cat-btn">Shop Now <i class="fa fa-arrow-right"></i></a>
+    </div>
+
+    <div class="cat-card" onclick="location.href='/groceries'">
+      <div class="cat-img-wrap">
+        <img src="/static/images/groceries/apple.jpg" alt="Fruits">
+      </div>
+      <h3>Fruits</h3>
+      <p>Juicy &amp; Natural</p>
+      <a href="/groceries" class="cat-btn">Shop Now <i class="fa fa-arrow-right"></i></a>
+    </div>
+
+    <div class="cat-card" onclick="location.href='/groceries'">
+      <div class="cat-img-wrap">
+        <img src="/static/images/7.jpeg" alt="Groceries">
+      </div>
+      <h3>Groceries</h3>
+      <p>Daily Essentials</p>
+      <a href="/groceries" class="cat-btn">Shop Now <i class="fa fa-arrow-right"></i></a>
+    </div>
+
+    <div class="cat-card" onclick="location.href='/groceries'">
+      <div class="cat-img-wrap">
+        <img src="/static/images/groceries/bath_soap.jpg" alt="Personal Care">
+      </div>
+      <h3>Personal Care</h3>
+      <p>Beauty &amp; Hygiene</p>
+      <a href="/groceries" class="cat-btn">Shop Now <i class="fa fa-arrow-right"></i></a>
+    </div>
+
+    <div class="cat-card" onclick="location.href='/groceries'">
+      <div class="cat-img-wrap">
+        <img src="/static/images/groceries/biscuits.jpg" alt="Snacks">
+      </div>
+      <h3>Snacks</h3>
+      <p>Tasty &amp; Crispy</p>
+      <a href="/groceries" class="cat-btn">Shop Now <i class="fa fa-arrow-right"></i></a>
+    </div>
+
+    <div class="cat-card" onclick="location.href='/nuts'">
+      <div class="cat-img-wrap">
+        <img src="/static/images/3.jpeg" alt="Nuts">
+      </div>
+      <h3>Nuts &amp; Seeds</h3>
+      <p>Healthy &amp; Nutritious</p>
+      <a href="/nuts" class="cat-btn">Shop Now <i class="fa fa-arrow-right"></i></a>
+    </div>
+
+    <div class="cat-card" onclick="location.href='/oil'">
+      <div class="cat-img-wrap">
+        <img src="/static/images/6.jpeg" alt="Oils">
+      </div>
+      <h3>Oils &amp; Spices</h3>
+      <p>Pure &amp; Natural</p>
+      <a href="/oil" class="cat-btn">Shop Now <i class="fa fa-arrow-right"></i></a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── SPECIALS (Eggs / Chicken / Mutton) ── -->
+<section class="products-section" id="specials">
+  <div class="section-title">
+    <h2>Our <span>Specials</span></h2>
+    <div class="title-line"></div>
+  </div>
+  <div class="products-grid">
+
+    <div class="prod-card">
+      <img class="prod-img"
+           src="/static/images/eggs.jpg"
+           alt="Eggs"
+           onerror="this.style.background='#e8f5ee'">
+      <div class="prod-body">
+        <div class="prod-name">Eggs</div>
+        <div class="prod-unit">per piece</div>
+        <div class="prod-price" data-item="Eggs">₹12</div>
+        <div class="prod-rating"><span class="stars">★★★★★</span><span class="count">(124)</span></div>
+      </div>
+      <div class="prod-actions">
+        <button class="btn-cart add-cart-btn" data-name="Eggs" data-price="12"
+          data-image="/static/images/eggs.jpg">
+          <i class="fa fa-cart-plus"></i> Add
+        </button>
+        <button class="btn-order order-btn" data-name="Eggs" data-price="12" data-unit="piece"
+          data-image="/static/images/eggs.jpg">
+          Order
+        </button>
+      </div>
+    </div>
+
+    <div class="prod-card">
+      <img class="prod-img"
+           src="/static/images/chicken.jpg"
+           alt="Chicken"
+           onerror="this.style.background='#e8f5ee'">
+      <div class="prod-body">
+        <div class="prod-name">Chicken</div>
+        <div class="prod-unit">per kg</div>
+        <div class="prod-price" data-item="Chicken">₹280</div>
+        <div class="prod-rating"><span class="stars">★★★★☆</span><span class="count">(98)</span></div>
+      </div>
+      <div class="prod-actions">
+        <button class="btn-cart add-cart-btn" data-name="Chicken" data-price="280"
+          data-image="/static/images/chicken.jpg">
+          <i class="fa fa-cart-plus"></i> Add
+        </button>
+        <button class="btn-order order-btn" data-name="Chicken" data-price="280"
+          data-image="/static/images/chicken.jpg">
+          Order
+        </button>
+      </div>
+    </div>
+
+    <!-- Admin-added New Arrivals -->
+    {% for prod in products %}
+    <div class="prod-card">
+      <img class="prod-img"
+           src="{{ url_for('static', filename='uploads/' + prod.image) }}"
+           alt="{{ prod.name }}"
+           onerror="this.src='/static/images/7.jpeg'">
+      <div class="prod-body">
+        <div class="prod-name">{{ prod.name }}</div>
+        <div class="prod-price">₹{{ prod.price }}</div>
+      </div>
+      <div class="prod-actions">
+        <button class="btn-cart add-cart-btn"
+          data-name="{{ prod.name }}" data-price="{{ prod.price }}"
+          data-image="{{ url_for('static', filename='uploads/' + prod.image) }}">
+          <i class="fa fa-cart-plus"></i> Add
+        </button>
+        <button class="btn-order order-btn"
+          data-name="{{ prod.name }}" data-price="{{ prod.price }}"
+          data-image="{{ url_for('static', filename='uploads/' + prod.image) }}">
+          Order
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</section>
+
+<!-- ── FEATURES BAR ── -->
+<section class="features-bar" id="features">
+  <div class="feature-item">
+    <div class="feature-icon"><i class="fa fa-truck-fast"></i></div>
+    <div class="feature-text">
+      <h4>Free Delivery</h4>
+      <p>On orders above ₹499</p>
+    </div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-icon"><i class="fa fa-shield-halved"></i></div>
+    <div class="feature-text">
+      <h4>Secure Payment</h4>
+      <p>100% safe &amp; secure</p>
+    </div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-icon"><i class="fa fa-headset"></i></div>
+    <div class="feature-text">
+      <h4>24/7 Support</h4>
+      <p>We're here to help</p>
+    </div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-icon"><i class="fa fa-rotate-left"></i></div>
+    <div class="feature-text">
+      <h4>Easy Returns</h4>
+      <p>Hassle free returns</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── ABOUT ── -->
+<section style="padding:50px 6%;background:var(--white);" id="about">
+  <div class="section-title">
+    <h2><span>About</span> Us</h2>
+    <div class="title-line"></div>
+  </div>
+  <div style="display:flex;gap:40px;align-items:center;flex-wrap:wrap;">
+    <img src="/static/images/7.jpeg"
+         style="width:100%;max-width:420px;border-radius:16px;object-fit:cover;height:300px;flex-shrink:0;"
+         alt="About Market">
+    <div style="flex:1;min-width:260px;">
+      <h3 style="font-size:2.4rem;font-weight:800;color:var(--green-dark);margin-bottom:14px;">
+        Your One-Stop Fresh Market
+      </h3>
+      <p style="font-size:1.5rem;color:var(--text-light);line-height:1.8;margin-bottom:14px;">
+        We offer a wide range of high-quality vegetables, seeds, nuts, oils, and spices
+        sourced with care and packed with goodness. Our mission is to deliver natural,
+        healthy, and premium products that elevate your cooking every day.
+      </p>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+        <li style="font-size:1.45rem;color:var(--text);display:flex;align-items:center;gap:8px;">
+          <i class="fa fa-circle-check" style="color:var(--green);"></i> Locally sourced, farm-fresh produce
+        </li>
+        <li style="font-size:1.45rem;color:var(--text);display:flex;align-items:center;gap:8px;">
+          <i class="fa fa-circle-check" style="color:var(--green);"></i> Daily updated market prices
+        </li>
+        <li style="font-size:1.45rem;color:var(--text);display:flex;align-items:center;gap:8px;">
+          <i class="fa fa-circle-check" style="color:var(--green);"></i> Cash on delivery — no hidden charges
+        </li>
+        <li style="font-size:1.45rem;color:var(--text);display:flex;align-items:center;gap:8px;">
+          <i class="fa fa-circle-check" style="color:var(--green);"></i> AI price comparison with local shops
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONTACT ── -->
+<section style="padding:50px 6%;background:var(--bg);" id="contact">
+  <div class="section-title">
+    <h2><span>Contact</span> Us</h2>
+    <div class="title-line"></div>
+  </div>
+  <div style="display:flex;gap:30px;flex-wrap:wrap;">
+    <iframe
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3943.88599333502!2d77.72001297384541!3d8.702375594018587!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b04130051d13c8b%3A0xfd5038009da29148!2sSalem%20RR%20Biriyani!5e0!3m2!1sen!2sin!4v1750316707469!5m2!1sen!2sin"
+      style="flex:1;min-width:280px;height:380px;border:0;border-radius:12px;" allowfullscreen loading="lazy">
+    </iframe>
+    <form action="/contact" method="POST"
+          style="flex:1;min-width:280px;background:#fff;padding:28px;border-radius:12px;
+                 box-shadow:0 2px 12px rgba(0,0,0,0.07);display:flex;flex-direction:column;gap:14px;">
+      <h3 style="font-size:2rem;font-weight:700;color:var(--green-dark);">Get in Touch</h3>
+      <input type="text" name="name" placeholder="Your Name" required
+        style="padding:12px 16px;border:1.5px solid var(--border);border-radius:8px;font-size:1.4rem;outline:none;">
+      <input type="email" name="email" placeholder="Email Address" required
+        style="padding:12px 16px;border:1.5px solid var(--border);border-radius:8px;font-size:1.4rem;outline:none;">
+      <input type="text" name="phone" placeholder="Phone Number" required
+        style="padding:12px 16px;border:1.5px solid var(--border);border-radius:8px;font-size:1.4rem;outline:none;">
+      <button type="submit"
+        style="background:var(--green);color:#fff;border:none;padding:13px;border-radius:8px;
+               font-size:1.5rem;font-weight:700;cursor:pointer;">
+        Send Message
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="main-footer">
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h3>Market</h3>
+      <p>Your one-stop shop for fresh vegetables, groceries &amp; more.</p>
+      <div class="footer-social">
+        <a href="https://wa.me/919500920199" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#categories">Categories</a></li>
+        <li><a href="#contact">Contact Us</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h3>Customer Service</h3>
+      <ul>
+        <li><a href="#">FAQs</a></li>
+        <li><a href="#">Shipping Policy</a></li>
+        <li><a href="#">Return Policy</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h3>Newsletter</h3>
+      <p>Subscribe to get updates on offers!</p>
+      <div class="newsletter-row">
+        <input type="email" placeholder="Enter your email">
+        <button>Subscribe</button>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2025 MARKET. All Rights Reserved.</span>
+    <span>Made with <span style="color:#e57373;">&#10084;</span> for healthy life</span>
+  </div>
+</footer>
+
+<!-- WhatsApp float -->
+<div style="position:fixed;bottom:20px;right:20px;z-index:1100;">
+  <a href="https://wa.me/919500920199" target="_blank"
+     style="width:56px;height:56px;background:#25D366;border-radius:50%;
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 4px 14px rgba(0,0,0,0.25);transition:transform 0.2s;"
+     onmouseover="this.style.transform='scale(1.1)'"
+     onmouseout="this.style.transform='scale(1)'">
+    <i class="fa-brands fa-whatsapp" style="color:#fff;font-size:2.8rem;"></i>
+  </a>
+</div>
+
+<!-- Cart panel scripts -->
+<link rel="stylesheet" href="{{ url_for('static', filename='cart-panel.css') }}">
+
+<!-- Cart toggle button -->
+<button class="cart-toggle-btn" id="cartToggleBtn" onclick="toggleCartPanel()">
+  <span class="cart-icon"><i class="fa fa-cart-shopping" style="font-size:1.8rem;color:#fff;"></i></span>
+  <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+</button>
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-panel-header">
+    <h3>Your Cart</h3>
+    <button class="cart-close-btn" onclick="closeCartPanel()">&times;</button>
+  </div>
+  <div id="cart-items-panel"></div>
+  <div class="cart-panel-total" id="cartPanelTotal">Total: ₹0.00</div>
+  <div class="cart-panel-actions">
+    <button class="cart-view-btn" onclick="window.location.href='/cart'">View Cart</button>
+    <button class="cart-clear-btn" onclick="clearCart()">Clear</button>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='cart-panel.js') }}"></script>
+<script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+
+<script>
+// ── Mobile Nav ──
+function openMobileNav() {
+  document.getElementById('mobileNav').classList.add('open');
+  document.getElementById('mobileOverlay').classList.add('open');
+}
+function closeMobileNav() {
+  document.getElementById('mobileNav').classList.remove('open');
+  document.getElementById('mobileOverlay').classList.remove('open');
+}
+
+// ── Header cart count sync ──
+function updateHeaderCartCount() {
+  const cart  = JSON.parse(localStorage.getItem('cart') || '[]');
+  const total = cart.reduce((s, i) => s + i.qty, 0);
+  const el    = document.getElementById('headerCartCount');
+  if (el) {
+    el.textContent = total;
+    el.style.display = total > 0 ? 'flex' : 'none';
+  }
+}
+setInterval(updateHeaderCartCount, 500);
+updateHeaderCartCount();
+
+// ── Search ──
+const SEARCH_DATA = [
+  { name:'Vegetables',         url:'/vegetables',  icon:'fa-leaf' },
+  { name:'Fruits',             url:'/groceries',   icon:'fa-apple-whole' },
+  { name:'Groceries',          url:'/groceries',   icon:'fa-basket-shopping' },
+  { name:'Nuts',               url:'/nuts',        icon:'fa-circle' },
+  { name:'Seeds',              url:'/seeds',       icon:'fa-seedling' },
+  { name:'Fragrant Items',     url:'/fragrant',    icon:'fa-spa' },
+  { name:'Mixed Spice Powder', url:'/spice',       icon:'fa-mortar-pestle' },
+  { name:'Oil Items',          url:'/oil',         icon:'fa-droplet' },
+  { name:'Eggs',               url:'/order',       icon:'fa-egg' },
+  { name:'Chicken',            url:'/order',       icon:'fa-drumstick-bite' },
+  { name:'AI Price Compare',   url:'/compare',     icon:'fa-robot' },
+  { name:'About',              url:'#about',       icon:'fa-circle-info' },
+  { name:'Contact',            url:'#contact',     icon:'fa-phone' },
+  // Vegetables
+  { name:'Carrot',             url:'/vegetables',  icon:'fa-carrot' },
+  { name:'Cucumber',           url:'/vegetables',  icon:'fa-leaf' },
+  { name:'Coriander Leaves',   url:'/vegetables',  icon:'fa-leaf' },
+  { name:'Mint Leaves',        url:'/vegetables',  icon:'fa-leaf' },
+  { name:'Cauliflower',        url:'/vegetables',  icon:'fa-leaf' },
+  { name:'Onion',              url:'/vegetables',  icon:'fa-circle' },
+  { name:'Tomato',             url:'/vegetables',  icon:'fa-circle' },
+  { name:'Potato',             url:'/vegetables',  icon:'fa-carrot' },
+  { name:'Brinjal',            url:'/vegetables',  icon:'fa-leaf' },
+  { name:'Capsicum',           url:'/vegetables',  icon:'fa-pepper-hot' },
+  { name:'Spinach',            url:'/vegetables',  icon:'fa-leaf' },
+  { name:'Cabbage',            url:'/vegetables',  icon:'fa-leaf' },
+  // Groceries
+  { name:'Fresh Milk',         url:'/groceries',   icon:'fa-droplet' },
+  { name:'Curd',               url:'/groceries',   icon:'fa-jar' },
+  { name:'Paneer',             url:'/groceries',   icon:'fa-cheese' },
+  { name:'Butter',             url:'/groceries',   icon:'fa-jar' },
+  { name:'Rice',               url:'/groceries',   icon:'fa-wheat-awn' },
+  { name:'Wheat Flour',        url:'/groceries',   icon:'fa-wheat-awn' },
+  { name:'Toor Dal',           url:'/groceries',   icon:'fa-wheat-awn' },
+  { name:'Banana',             url:'/groceries',   icon:'fa-apple-whole' },
+  { name:'Apple',              url:'/groceries',   icon:'fa-apple-whole' },
+  { name:'Mango',              url:'/groceries',   icon:'fa-apple-whole' },
+  { name:'Grapes',             url:'/groceries',   icon:'fa-apple-whole' },
+  { name:'Bath Soap',          url:'/groceries',   icon:'fa-soap' },
+  { name:'Washing Powder',     url:'/groceries',   icon:'fa-soap' },
+  { name:'Shampoo',            url:'/groceries',   icon:'fa-soap' },
+  { name:'Biscuits',           url:'/groceries',   icon:'fa-cookie-bite' },
+  { name:'Chips',              url:'/groceries',   icon:'fa-cookie-bite' },
+  { name:'Noodles',            url:'/groceries',   icon:'fa-utensils' },
+  // Nuts & Dry Fruits
+  { name:'Hazelnut',           url:'/nuts',        icon:'fa-circle' },
+  { name:'Pista',              url:'/nuts',        icon:'fa-circle' },
+  { name:'Walnuts',            url:'/nuts',        icon:'fa-circle' },
+  { name:'Almonds',            url:'/nuts',        icon:'fa-circle' },
+  { name:'Cashews',            url:'/nuts',        icon:'fa-circle' },
+  { name:'Dates',              url:'/nuts',        icon:'fa-circle' },
+  { name:'Raisins',            url:'/nuts',        icon:'fa-circle' },
+  { name:'Groundnut',          url:'/nuts',        icon:'fa-circle' },
+  { name:'Pumpkin Seeds',      url:'/nuts',        icon:'fa-seedling' },
+  { name:'Figs',               url:'/nuts',        icon:'fa-circle' },
+  { name:'Mixed Nuts',         url:'/nuts',        icon:'fa-circle' },
+  // Seeds
+  { name:'Sunflower Seeds',    url:'/seeds',       icon:'fa-seedling' },
+  { name:'Chia Seeds',         url:'/seeds',       icon:'fa-seedling' },
+  { name:'Fennel Seeds',       url:'/seeds',       icon:'fa-seedling' },
+  { name:'Fenugreek Seeds',    url:'/seeds',       icon:'fa-seedling' },
+  { name:'Coriander Seeds',    url:'/seeds',       icon:'fa-seedling' },
+  { name:'Mustard Seeds',      url:'/seeds',       icon:'fa-seedling' },
+  { name:'Sesame Seeds',       url:'/seeds',       icon:'fa-seedling' },
+  { name:'Flax Seeds',         url:'/seeds',       icon:'fa-seedling' },
+  { name:'Black Seeds',        url:'/seeds',       icon:'fa-seedling' },
+  // Oils
+  { name:'Sunflower Oil',      url:'/oil',         icon:'fa-droplet' },
+  { name:'Groundnut Oil',      url:'/oil',         icon:'fa-droplet' },
+  { name:'Coconut Oil',        url:'/oil',         icon:'fa-droplet' },
+  { name:'Olive Oil',          url:'/oil',         icon:'fa-droplet' },
+  { name:'Sesame Oil',         url:'/oil',         icon:'fa-droplet' },
+  { name:'Mustard Oil',        url:'/oil',         icon:'fa-droplet' },
+  // Fragrant
+  { name:'Cardamom',           url:'/fragrant',    icon:'fa-spa' },
+  { name:'Cinnamon',           url:'/fragrant',    icon:'fa-spa' },
+  { name:'Cloves',             url:'/fragrant',    icon:'fa-spa' },
+  { name:'Rose Petals',        url:'/fragrant',    icon:'fa-spa' },
+  { name:'Jasmine',            url:'/fragrant',    icon:'fa-spa' },
+  { name:'Bay Leaves',         url:'/fragrant',    icon:'fa-spa' },
+  { name:'Star Anise',         url:'/fragrant',    icon:'fa-spa' },
+  { name:'Lavender',           url:'/fragrant',    icon:'fa-spa' },
+  // Spices
+  { name:'Red Chili Powder',   url:'/spice',       icon:'fa-mortar-pestle' },
+  { name:'Turmeric Powder',    url:'/spice',       icon:'fa-mortar-pestle' },
+  { name:'Coriander Powder',   url:'/spice',       icon:'fa-mortar-pestle' },
+  { name:'Cumin Powder',       url:'/spice',       icon:'fa-mortar-pestle' },
+  { name:'Garam Masala',       url:'/spice',       icon:'fa-mortar-pestle' },
+  { name:'Biryani Masala',     url:'/spice',       icon:'fa-mortar-pestle' },
+  { name:'Sambar Powder',      url:'/spice',       icon:'fa-mortar-pestle' },
+  { name:'Rasam Powder',       url:'/spice',       icon:'fa-mortar-pestle' },
+  { name:'Pepper Powder',      url:'/spice',       icon:'fa-mortar-pestle' },
+  { name:'Curry Masala',       url:'/spice',       icon:'fa-mortar-pestle' },
+];
+
+const searchInput  = document.getElementById('searchInput');
+const dropdown     = document.getElementById('searchDropdown');
+const clearBtn     = document.getElementById('clearBtn');
+
+function hl(text, q) {
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return text.replace(re, '<mark>$1</mark>');
+}
+
+function handleSearch(q) {
+  clearBtn.style.display = q ? 'block' : 'none';
+  if (!q.trim()) { dropdown.classList.remove('show'); return; }
+  const matches = SEARCH_DATA.filter(p => p.name.toLowerCase().includes(q.toLowerCase()));
+  if (!matches.length) {
+    dropdown.innerHTML = `<div class="search-no-result">No results for "<b>${q}</b>"</div>`;
+  } else {
+    dropdown.innerHTML = matches.map(p =>
+      `<a href="${p.url}"><i class="fa-solid ${p.icon}"></i>${hl(p.name,q)}</a>`
+    ).join('');
+  }
+  dropdown.classList.add('show');
+}
+
+function doSearch() {
+  const q = searchInput.value.trim();
+  if (!q) return;
+  const m = SEARCH_DATA.find(p => p.name.toLowerCase().includes(q.toLowerCase()));
+  if (m) window.location.href = m.url;
+}
+
+function clearSearch() {
+  searchInput.value = '';
+  clearBtn.style.display = 'none';
+  dropdown.classList.remove('show');
+  searchInput.focus();
+}
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('headerSearch').contains(e.target))
+    dropdown.classList.remove('show');
+});
+
+// ── Login success toast ──
+{% if login_success %}
+window.addEventListener('load', function(){
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#1a7a4a;color:#fff;padding:14px 32px;border-radius:30px;font-size:1.5rem;font-weight:700;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,0.2);';
+  t.textContent = '✓ Login Successful! Welcome, {{ session.get("user") }}';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+});
+{% endif %}
+
+// ── Dynamic prices on specials ──
+(async function() {
+  try {
+    const res = await fetch('/api/prices');
+    const prices = await res.json();
+    document.querySelectorAll('[data-item]').forEach(el => {
+      const p = prices[el.dataset.item];
+      if (p) {
+        el.textContent = '₹' + parseFloat(p).toFixed(2);
+        const card = el.closest('.prod-card');
+        if (card) card.querySelectorAll('[data-price]').forEach(b => b.dataset.price = p);
+      }
+    });
+  } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

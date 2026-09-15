@@ -1,0 +1,128 @@
+{% extends "layout.html" %}
+{% block title %}Vegetables{% endblock %}
+
+{% block content %}
+
+<!-- HERO BANNER -->
+<div class="cat-hero">
+  <div class="cat-hero-text">
+    <h1>Fresh <span>Vegetables</span></h1>
+    <p>Farm-fresh vegetables delivered straight to your doorstep.</p>
+    <span class="cat-hero-badge"><i class="fa fa-leaf"></i> 100% Fresh &amp; Organic</span>
+  </div>
+  <img class="cat-hero-img"
+       src="{{ url_for('static', filename='images/1.jpeg') }}"
+       alt="Vegetables">
+</div>
+
+<!-- TOOLBAR -->
+<div class="cat-toolbar">
+  <button class="cat-filter-btn active" onclick="filterItems('all',this)">
+    <i class="fa fa-border-all"></i> All
+  </button>
+  <button class="cat-filter-btn" onclick="filterItems('leafy',this)">
+    <i class="fa fa-leaf"></i> Leafy
+  </button>
+  <button class="cat-filter-btn" onclick="filterItems('root',this)">
+    <i class="fa fa-carrot"></i> Root
+  </button>
+  <button class="cat-filter-btn" onclick="filterItems('other',this)">
+    <i class="fa fa-seedling"></i> Other
+  </button>
+  <span class="cat-result-count" id="resultCount"></span>
+</div>
+
+<!-- PRODUCTS GRID -->
+<div class="cat-grid" id="prodGrid">
+
+  {% set vegs = [
+    {"name":"Carrot",           "price":"100.99","unit":"per kg",   "img":"/static/images/vegetables/carrot.jpg",                                                     "cat":"root",  "rating":4.5},
+    {"name":"Cucumber",         "price":"30.99", "unit":"per kg",   "img":"/static/images/vegetables/cucumber.jpg",                                                   "cat":"other", "rating":4.0},
+    {"name":"Coriander Leaves", "price":"22.99", "unit":"per bunch","img":"/static/images/vegetables/greenleaves.jpg",                                                "cat":"leafy", "rating":4.2},
+    {"name":"Mint Leaves",      "price":"22.99", "unit":"per bunch","img":"/static/images/vegetables/leaves.jpg",         "cat":"leafy", "rating":4.8},
+    {"name":"Cauliflower",      "price":"80.99", "unit":"per piece","img":"/static/images/vegetables/cauliflower.jpg",    "cat":"other", "rating":4.6},
+    {"name":"Onion",            "price":"100.99","unit":"per kg",   "img":"/static/images/vegetables/oniyan.jpg",         "cat":"root",  "rating":4.0},
+    {"name":"Tomato",           "price":"40.00", "unit":"per kg",   "img":"/static/images/vegetables/tomato.jpg",         "cat":"other", "rating":4.3},
+    {"name":"Potato",           "price":"35.00", "unit":"per kg",   "img":"/static/images/vegetables/potato.jpg",         "cat":"root",  "rating":4.1},
+    {"name":"Brinjal",          "price":"45.00", "unit":"per kg",   "img":"/static/images/vegetables/kathiri.jpg",        "cat":"other", "rating":3.9},
+    {"name":"Capsicum",         "price":"80.00", "unit":"per kg",   "img":"/static/images/vegetables/capsicum.jpg",       "cat":"other", "rating":4.4},
+    {"name":"Spinach",          "price":"25.00", "unit":"per bunch","img":"/static/images/vegetables/leaves2.jpg",        "cat":"leafy", "rating":4.5},
+    {"name":"Cabbage",          "price":"30.00", "unit":"per piece","img":"/static/images/vegetables/carbage.jpg",        "cat":"other", "rating":4.2},
+  ] %}
+
+  {% for v in vegs %}
+  <div class="pcard" data-cat="{{ v.cat }}">
+    <div class="pcard-img-wrap">
+      <img src="{{ v.img }}"
+           alt="{{ v.name }}"
+           onerror="this.src='/static/images/1.jpeg'">
+      <span class="pcard-badge">Fresh</span>
+    </div>
+    <div class="pcard-body">
+      <div class="pcard-name">{{ v.name }}</div>
+      <div class="pcard-unit">{{ v.unit }}</div>
+      <div class="pcard-price" data-item="{{ v.name }}">
+        ₹{{ v.price }}
+      </div>
+      <div class="pcard-rating">
+        <span class="stars">
+          {% for i in range(5) %}{% if i < v.rating|int %}★{% else %}☆{% endif %}{% endfor %}
+        </span>
+        <span class="cnt">({{ (v.rating * 20)|int }})</span>
+      </div>
+      <div class="pcard-qty">
+        <label>Qty:</label>
+        <div class="qty-ctrl">
+          <button type="button" onclick="changeQty(this,-1)">−</button>
+          <input type="number" value="1" min="1" class="qty-input">
+          <button type="button" onclick="changeQty(this,1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="pcard-actions">
+      <button class="pcard-btn-cart add-cart-btn"
+              data-name="{{ v.name }}"
+              data-price="{{ v.price }}"
+              data-image="{{ v.img }}">
+        <i class="fa fa-cart-plus"></i> Add
+      </button>
+      <button class="pcard-btn-order order-btn"
+              data-name="{{ v.name }}"
+              data-price="{{ v.price }}"
+              data-image="{{ v.img }}">
+        Order
+      </button>
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changeQty(btn, delta) {
+  const input = btn.parentElement.querySelector('input');
+  input.value = Math.max(1, parseInt(input.value||1) + delta);
+}
+
+function filterItems(cat, btn) {
+  document.querySelectorAll('.cat-filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  let count = 0;
+  document.querySelectorAll('.pcard').forEach(card=>{
+    const show = cat==='all' || card.dataset.cat===cat;
+    card.style.display = show ? '' : 'none';
+    if(show) count++;
+  });
+  document.getElementById('resultCount').textContent = count + ' products';
+}
+
+// Init count
+window.addEventListener('DOMContentLoaded',()=>{
+  const total = document.querySelectorAll('.pcard').length;
+  document.getElementById('resultCount').textContent = total + ' products';
+});
+</script>
+{% endblock %}

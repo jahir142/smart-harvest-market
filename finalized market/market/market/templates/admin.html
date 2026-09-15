@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Market</title>
+<link rel="icon" href="{{ url_for('static', filename='images/cake-img/logo.jpg') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* ── Admin-specific overrides ── */
+body { background: var(--bg); }
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: var(--green-dark);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.sidebar-logo {
+  padding: 22px 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-logo img {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+.sidebar-logo .brand { color:#fff; font-size:1.7rem; font-weight:800; }
+.sidebar-logo .sub   { color:rgba(255,255,255,0.6); font-size:1.1rem; }
+
+.sidebar-nav { flex:1; padding: 16px 0; }
+.nav-label {
+  padding: 10px 20px 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+.nav-item.active {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border-left-color: #4ade80;
+}
+.nav-item i { width: 18px; text-align: center; font-size: 1.5rem; }
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-user {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.sidebar-user .avatar {
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1.6rem;
+}
+.sidebar-user .info { flex:1; }
+.sidebar-user .info .name { color:#fff; font-size:1.3rem; font-weight:700; }
+.sidebar-user .info .role { color:rgba(255,255,255,0.5); font-size:1.1rem; }
+.logout-link {
+  display: flex; align-items: center; gap: 8px;
+  color: rgba(255,255,255,0.6);
+  font-size: 1.3rem;
+  text-decoration: none;
+  padding: 8px 0;
+  transition: color 0.2s;
+}
+.logout-link:hover { color: #ff8080; }
+
+/* Main content */
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+.admin-topbar {
+  background: #fff;
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.admin-topbar h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--green-dark);
+}
+.topbar-badges { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.badge-green { background: #e8f5ee; color: var(--green-dark); }
+.badge-red   { background: #fef2f2; color: #b91c1c; }
+.topbar-actions { display:flex; gap:10px; align-items:center; }
+.btn-sm {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: 0.2s;
+}
+.btn-sm-green { background: var(--green); color: #fff; }
+.btn-sm-green:hover { background: var(--green-dark); }
+.btn-sm-outline { background: #fff; color: var(--green); border: 2px solid var(--green); }
+.btn-sm-outline:hover { background: var(--green); color:#fff; }
+
+.admin-content { padding: 28px; flex:1; overflow-y:auto; }
+
+/* Stat cards row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+  border-left: 4px solid var(--green);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.stat-icon {
+  width: 48px; height: 48px;
+  background: var(--green-light);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; color: var(--green);
+  flex-shrink: 0;
+}
+.stat-info .val { font-size: 2.4rem; font-weight: 800; color: var(--green-dark); }
+.stat-info .lbl { font-size: 1.2rem; color: var(--text-light); }
+
+/* Tabs */
+.tab-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 2px;
+}
+.tab-btn {
+  padding: 10px 20px;
+  border: none;
+  background: none;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-light);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+  display: flex; align-items: center; gap: 7px;
+}
+.tab-btn:hover { color: var(--green); }
+.tab-btn.active { color: var(--green); border-bottom-color: var(--green); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--green-dark);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Alert banners */
+.alert {
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.alert-error   { background:#fef2f2; border:1px solid #fca5a5; color:#b91c1c; }
+.alert-success { background:#f0fdf4; border:1px solid #86efac; color:#15803d; }
+
+/* Form */
+.form-grid { display:flex; gap:14px; flex-wrap:wrap; }
+.form-field { flex:1; min-width:180px; display:flex; flex-direction:column; gap:5px; }
+.form-field label { font-size:1.25rem; font-weight:700; color:var(--text-light); }
+.form-field input[type="text"],
+.form-field input[type="number"],
+.form-field input[type="file"],
+.form-field input[type="password"],
+.form-field input[type="email"],
+.form-field select {
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 1.4rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  background: #fff;
+}
+.form-field input:focus,
+.form-field select:focus { border-color: var(--green); }
+.form-field .hint { font-size:1.1rem; color:#aaa; }
+
+.btn-primary {
+  background: var(--green);
+  color: #fff;
+  border: none;
+  padding: 11px 26px;
+  border-radius: 8px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: 0.2s;
+}
+.btn-primary:hover { background: var(--green-dark); transform: translateY(-1px); }
+
+.btn-edit {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: 0.2s;
+}
+.btn-edit:hover { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+
+.btn-delete {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: 0.2s;
+}
+.btn-delete:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+
+/* Table */
+.data-table { width:100%; border-collapse:collapse; font-size:1.3rem; }
+.data-table th {
+  background: var(--green-light);
+  color: var(--green-dark);
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.data-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--green-light); }
+
+.prod-thumb {
+  width: 54px; height: 54px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+}
+.no-img {
+  width: 54px; height: 54px;
+  background: var(--green-light);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-light);
+  font-size: 2rem;
+}
+.action-cell { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+
+/* Price table */
+.price-input {
+  width: 100px;
+  padding: 6px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 1.3rem;
+  outline: none;
+  font-family: inherit;
+}
+.price-input:focus { border-color: var(--green); }
+.save-tag { color: var(--green); font-size: 1.2rem; display:none; font-weight:700; }
+
+.btn-save-sm {
+  background: var(--green);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.btn-save-sm:hover { background: var(--green-dark); }
+.btn-del-sm {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.btn-del-sm:hover { background: #ef4444; color: #fff; }
+
+/* AI status banner */
+.ai-banner {
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.ai-banner-ok  { background:#f0fdf4; border:1px solid #86efac; color:#15803d; }
+.ai-banner-warn{ background:#fffbeb; border:1px solid #fde68a; color:#92400e; }
+
+/* Modal */
+.modal-bg {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 9000;
+  display: none; align-items: center; justify-content: center;
+}
+.modal-bg.open { display: flex; }
+.modal-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  width: 90%; max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: modalPop .3s ease;
+  position: relative;
+}
+@keyframes modalPop {
+  from { transform: scale(.9); opacity:0; }
+  to   { transform: scale(1);  opacity:1; }
+}
+.modal-close {
+  position: absolute; top:12px; right:16px;
+  font-size: 2.2rem; background:none; border:none;
+  color: #aaa; cursor:pointer; transition:color 0.2s;
+}
+.modal-close:hover { color: #ef4444; }
+.modal-title {
+  font-size: 1.8rem; font-weight:800;
+  color: var(--green-dark);
+  margin-bottom: 20px;
+  display:flex; align-items:center; gap:8px;
+}
+
+/* Image preview */
+.img-preview-wrap { margin-bottom: 8px; }
+.img-preview-wrap img {
+  width: 80px; height: 80px;
+  object-fit: cover; border-radius: 8px;
+  border: 2px solid var(--border);
+}
+
+/* Toast */
+.admin-toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--green-dark);
+  color: #fff;
+  padding: 13px 22px;
+  border-radius: 10px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+  display: none;
+  z-index: 9999;
+  animation: slideUp .3s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity:0; }
+  to   { transform: translateY(0);    opacity:1; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 40px; color: #bbb;
+}
+.empty-state i { font-size: 4rem; display:block; margin-bottom: 12px; }
+.empty-state p { font-size: 1.4rem; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .admin-topbar { padding: 14px 16px; }
+  .admin-content { padding: 16px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="admin-layout">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <img src="{{ url_for('static', filename='images/cake-img/logo.jpg') }}" alt="">
+    <div>
+      <div class="brand">MARKET</div>
+      <div class="sub">Admin Panel</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main</div>
+    <button class="nav-item active" onclick="switchTab('products',this)">
+      <i class="fa fa-boxes-stacked"></i> Products
+    </button>
+    <button class="nav-item" onclick="switchTab('prices',this)">
+      <i class="fa fa-tags"></i> Daily Prices
+    </button>
+    <button class="nav-item" onclick="switchTab('orders',this)">
+      <i class="fa fa-receipt"></i> Orders
+    </button>
+    <div class="nav-label">Settings</div>
+    <button class="nav-item" onclick="switchTab('ai',this)">
+      <i class="fa fa-robot"></i> AI Settings
+    </button>
+    <a class="nav-item" href="/history">
+      <i class="fa fa-clock-rotate-left"></i> Order History
+    </a>
+    <a class="nav-item" href="/">
+      <i class="fa fa-store"></i> View Site
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar"><i class="fa fa-shield-halved"></i></div>
+      <div class="info">
+        <div class="name">{{ session.get('admin','Admin') }}</div>
+        <div class="role">Administrator</div>
+      </div>
+    </div>
+    <a href="/admin/logout" class="logout-link">
+      <i class="fa fa-right-from-bracket"></i> Logout
+    </a>
+  </div>
+</aside>
+
+<!-- ── MAIN CONTENT ── -->
+<div class="admin-main">
+
+  <!-- Top bar -->
+  <div class="admin-topbar">
+    <h1 id="pageTitle"><i class="fa fa-boxes-stacked"></i> Products</h1>
+    <div class="topbar-badges">
+      {% if db_status %}
+        <span class="badge badge-green"><i class="fa fa-circle" style="font-size:0.8rem;"></i> DB Connected</span>
+      {% else %}
+        <span class="badge badge-red"><i class="fa fa-circle" style="font-size:0.8rem;"></i> DB Offline</span>
+      {% endif %}
+    </div>
+    <div class="topbar-actions">
+      <a href="/" class="btn-sm btn-sm-outline"><i class="fa fa-store"></i> View Site</a>
+    </div>
+  </div>
+
+  <!-- Content area -->
+  <div class="admin-content">
+
+    <!-- ── STATS ── -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa fa-bag-shopping"></i></div>
+        <div class="stat-info">
+          <div class="val">{{ stats.total_orders }}</div>
+          <div class="lbl">Total Orders</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa fa-indian-rupee-sign"></i></div>
+        <div class="stat-info">
+          <div class="val">₹{{ "%.0f"|format(stats.total_revenue) }}</div>
+          <div class="lbl">Revenue</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa fa-boxes-stacked"></i></div>
+        <div class="stat-info">
+          <div class="val">{{ products|length }}</div>
+          <div class="lbl">Products</div>
+        </div>
+      </div>
+      <div class="stat-card" style="border-left-color:#6c3de8;">
+        <div class="stat-icon" style="background:#f3f0ff;color:#6c3de8;">
+          <i class="fa fa-robot"></i>
+        </div>
+        <div class="stat-info">
+          <div class="val" id="aiStatVal">—</div>
+          <div class="lbl">AI Status</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB ROW ── -->
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-products-btn" onclick="switchTab('products',this)">
+        <i class="fa fa-boxes-stacked"></i> Products
+      </button>
+      <button class="tab-btn" id="tab-prices-btn" onclick="switchTab('prices',this)">
+        <i class="fa fa-tags"></i> Daily Prices
+      </button>
+      <button class="tab-btn" id="tab-orders-btn" onclick="switchTab('orders',this)">
+        <i class="fa fa-receipt"></i> Orders
+      </button>
+      <button class="tab-btn" id="tab-ai-btn" onclick="switchTab('ai',this)">
+        <i class="fa fa-robot"></i> AI Settings
+      </button>
+    </div>
+
+    <!-- ════════ PRODUCTS TAB ════════ -->
+    <div class="tab-pane active" id="tab-products">
+
+      <!-- Add Product -->
+      <div class="card">
+        <div class="card-title"><i class="fa fa-plus-circle"></i> Add New Product</div>
+
+        {% if request.args.get('err') %}
+        <div class="alert alert-error">
+          <i class="fa fa-circle-exclamation"></i> {{ request.args.get('err') }}
+        </div>
+        {% endif %}
+        {% if request.args.get('success') %}
+        <div class="alert alert-success">
+          <i class="fa fa-circle-check"></i> {{ request.args.get('success') }}
+        </div>
+        {% endif %}
+
+        <form action="/admin/add_product" method="POST" enctype="multipart/form-data"
+              onsubmit="return validateAddForm(this)">
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Product Name <span style="color:#e00;">*</span></label>
+              <input type="text" name="prodName" placeholder="e.g. Organic Carrot"
+                     oninput="this.value=this.value.replace(/[0-9]/g,'')" required>
+              <span class="hint">Letters only — no numbers allowed</span>
+            </div>
+            <div class="form-field" style="max-width:160px;">
+              <label>Price (₹) <span style="color:#e00;">*</span></label>
+              <input type="number" name="prodPrice" placeholder="80" min="0" step="0.01" required>
+              <span class="hint">Numbers only</span>
+            </div>
+            <div class="form-field">
+              <label>Product Image <span style="color:#e00;">*</span></label>
+              <input type="file" name="prodImage" accept="image/*" required>
+            </div>
+          </div>
+          <br>
+          <button type="submit" class="btn-primary">
+            <i class="fa fa-plus"></i> Add Product
+          </button>
+        </form>
+      </div>
+
+      <!-- Product List -->
+      <div class="card">
+        <div class="card-title">
+          <i class="fa fa-list"></i> All Products
+          <span style="font-size:1.3rem;font-weight:400;color:var(--text-light);">({{ products|length }})</span>
+        </div>
+
+        {% if products %}
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Image</th>
+                <th>Product Name</th>
+                <th>Price</th>
+                <th style="width:180px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in products %}
+              <tr>
+                <td style="color:#aaa;font-weight:700;">{{ loop.index }}</td>
+                <td>
+                  {% if p.image %}
+                  <img class="prod-thumb"
+                       src="{{ url_for('static', filename='uploads/' ~ p.image) }}"
+                       alt="" onerror="this.style.display='none'">
+                  {% else %}
+                  <div class="no-img"><i class="fa fa-image"></i></div>
+                  {% endif %}
+                </td>
+                <td><b>{{ p.name }}</b></td>
+                <td style="color:var(--green-dark);font-weight:700;">₹{{ p.price }}</td>
+                <td>
+                  <div class="action-cell">
+                    <button class="btn-edit"
+                      onclick="openEditModal({{ loop.index0 }},'{{ p.name|replace("'","\\'") }}','{{ p.price }}','{{ p.image }}')">
+                      <i class="fa fa-pen"></i> Edit
+                    </button>
+                    <form action="/admin/delete_product" method="POST" style="display:inline;"
+                          onsubmit="return confirm('Delete &quot;{{ p.name }}&quot;? This cannot be undone.')">
+                      <input type="hidden" name="prodIndex" value="{{ loop.index0 }}">
+                      <button type="submit" class="btn-delete">
+                        <i class="fa fa-trash"></i> Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <i class="fa fa-box-open"></i>
+          <p>No products yet. Add one above!</p>
+        </div>
+        {% endif %}
+      </div>
+    </div><!-- /products tab -->
+
+    <!-- ════════ PRICES TAB ════════ -->
+    <div class="tab-pane" id="tab-prices">
+
+      <!-- Add to list -->
+      <div class="card">
+        <div class="card-title"><i class="fa fa-plus"></i> Add Item to Price List</div>
+        <div class="form-grid" style="align-items:flex-end;">
+          <div class="form-field">
+            <label>Item Name</label>
+            <input type="text" id="newPriceName" placeholder="e.g. Tomato">
+          </div>
+          <div class="form-field" style="max-width:150px;">
+            <label>Price (₹)</label>
+            <input type="number" id="newPriceVal" min="0" placeholder="45">
+          </div>
+          <button class="btn-primary" onclick="addPriceItem()" style="margin-bottom:0;">
+            <i class="fa fa-plus"></i> Add
+          </button>
+        </div>
+      </div>
+
+      <!-- Price table -->
+      <div class="card">
+        <div class="card-title">
+          <i class="fa fa-tags"></i> Today's Prices
+          <span style="font-size:1.3rem;font-weight:400;color:var(--text-light);">
+            — updates reflect on category pages
+          </span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="priceTable">
+            <thead>
+              <tr><th>Item</th><th>Price (₹)</th><th style="width:200px;">Actions</th></tr>
+            </thead>
+            <tbody id="priceTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /prices tab -->
+
+    <!-- ════════ ORDERS TAB ════════ -->
+    <div class="tab-pane" id="tab-orders">
+      <div class="card">
+        <div class="card-title"><i class="fa fa-receipt"></i> Recent Orders (Last 10)</div>
+        {% if recent_orders %}
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr><th>#</th><th>Customer</th><th>Product</th><th>Total</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+              {% for o in recent_orders %}
+              <tr>
+                <td style="color:#aaa;">{{ loop.index }}</td>
+                <td><b>{{ o[0] }}</b></td>
+                <td>{{ o[1] }}</td>
+                <td style="color:var(--green-dark);font-weight:700;">₹{{ o[2] }}</td>
+                <td style="color:var(--text-light);font-size:1.2rem;">{{ o[3] }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          {% if db_status %}
+          <i class="fa fa-inbox"></i><p>No orders yet.</p>
+          {% else %}
+          <i class="fa fa-database" style="color:#ef4444;"></i>
+          <p>Database offline — connect DB to see orders.</p>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div><!-- /orders tab -->
+
+    <!-- ════════ AI TAB ════════ -->
+    <div class="tab-pane" id="tab-ai">
+      <div class="card">
+        <div class="card-title"><i class="fa fa-robot" style="color:#6c3de8;"></i> Gemini AI Settings</div>
+
+        <div id="aiBanner" class="ai-banner ai-banner-warn">
+          <i class="fa fa-spinner fa-spin"></i> Checking AI status...
+        </div>
+
+        <!-- How to get key -->
+        <div style="background:var(--green-light);border:1px solid var(--border);
+                    border-radius:10px;padding:16px 18px;margin-bottom:20px;font-size:1.35rem;line-height:1.9;">
+          <b style="color:var(--green-dark);">How to get your FREE Gemini API key:</b><br>
+          1. Visit
+          <a href="https://aistudio.google.com/app/apikey" target="_blank"
+             style="color:#6c3de8;font-weight:700;">aistudio.google.com/app/apikey</a><br>
+          2. Click <b>"Create API Key"</b> → Copy it<br>
+          3. Paste below and click <b>Save &amp; Verify</b> — Done!<br>
+          <span style="color:var(--text-light);font-size:1.2rem;">
+            Key is stored locally in db_config.json — never shared.
+          </span>
+        </div>
+
+        <div class="form-grid" style="align-items:flex-end;">
+          <div class="form-field" style="flex:1;">
+            <label>Gemini API Key</label>
+            <input type="password" id="geminiKeyInput" placeholder="AIzaSy..."
+                   style="font-family:monospace;letter-spacing:1px;">
+            <span class="hint" id="keyPreviewHint"></span>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:0;">
+            <button class="btn-primary" onclick="saveGeminiKey()" id="saveKeyBtn">
+              <i class="fa fa-save"></i> Save &amp; Verify
+            </button>
+            <button class="btn-sm btn-sm-outline" onclick="toggleKeyVisibility()">
+              <i class="fa fa-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+        <div id="keyTestResult" style="display:none;margin-top:12px;padding:12px 16px;border-radius:8px;font-size:1.35rem;font-weight:600;"></div>
+      </div>
+
+      <!-- Features info -->
+      <div class="card">
+        <div class="card-title"><i class="fa fa-circle-info"></i> AI Features Overview</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;">
+          <div style="background:var(--green-light);border-radius:10px;padding:16px;">
+            <i class="fa fa-robot" style="font-size:2.2rem;color:var(--green);margin-bottom:8px;display:block;"></i>
+            <b style="color:var(--green-dark);font-size:1.4rem;">AI Chatbot</b>
+            <p style="font-size:1.3rem;color:var(--text-light);margin-top:6px;line-height:1.6;">
+              Customers ask about products, prices, orders. Available on all pages.
+            </p>
+          </div>
+          <div style="background:var(--green-light);border-radius:10px;padding:16px;">
+            <i class="fa fa-scale-balanced" style="font-size:2.2rem;color:var(--green);margin-bottom:8px;display:block;"></i>
+            <b style="color:var(--green-dark);font-size:1.4rem;">Price Comparison</b>
+            <p style="font-size:1.3rem;color:var(--text-light);margin-top:6px;line-height:1.6;">
+              AI compares your prices with Tamil Nadu local markets honestly.
+            </p>
+          </div>
+          <div style="background:var(--green-light);border-radius:10px;padding:16px;">
+            <i class="fa fa-lock" style="font-size:2.2rem;color:var(--green);margin-bottom:8px;display:block;"></i>
+            <b style="color:var(--green-dark);font-size:1.4rem;">Secure Storage</b>
+            <p style="font-size:1.3rem;color:var(--text-light);margin-top:6px;line-height:1.6;">
+              Key saved in db_config.json locally — never sent anywhere.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div><!-- /ai tab -->
+
+  </div><!-- /admin-content -->
+</div><!-- /admin-main -->
+</div><!-- /admin-layout -->
+
+<!-- ── EDIT PRODUCT MODAL ── -->
+<div class="modal-bg" id="editModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeEditModal()">&times;</button>
+    <div class="modal-title"><i class="fa fa-pen"></i> Edit Product</div>
+
+    <div class="img-preview-wrap" id="editImgPreview"></div>
+
+    <form action="/admin/edit_product" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="prodIndex" id="editIdx">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Product Name</label>
+          <input type="text" name="prodName" id="editName"
+                 oninput="this.value=this.value.replace(/[0-9]/g,'')" required>
+        </div>
+        <div class="form-field" style="max-width:160px;">
+          <label>Price (₹)</label>
+          <input type="number" name="prodPrice" id="editPrice" min="0" step="0.01" required>
+        </div>
+        <div class="form-field">
+          <label>New Image <span style="color:#aaa;font-size:1.1rem;">(optional)</span></label>
+          <input type="file" name="prodImage" accept="image/*">
+        </div>
+      </div>
+      <br>
+      <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+        <i class="fa fa-save"></i> Save Changes
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="admin-toast" id="adminToast"></div>
+
+<script>
+// ═══════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════
+const TAB_TITLES = {
+  products: '<i class="fa fa-boxes-stacked"></i> Products',
+  prices:   '<i class="fa fa-tags"></i> Daily Prices',
+  orders:   '<i class="fa fa-receipt"></i> Orders',
+  ai:       '<i class="fa fa-robot"></i> AI Settings'
+};
+
+function switchTab(name, clickedEl) {
+  // Panes
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  // Tab buttons (top row)
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name + '-btn')?.classList.add('active');
+  // Sidebar nav items
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (clickedEl) clickedEl.classList.add('active');
+  // Page title
+  document.getElementById('pageTitle').innerHTML = TAB_TITLES[name] || name;
+  // Lazy load
+  if (name === 'prices') loadPrices();
+  if (name === 'ai') loadAIStatus();
+}
+
+// ═══════════════════════════════
+//  TOAST
+// ═══════════════════════════════
+function showToast(msg, type = 'ok') {
+  const t = document.getElementById('adminToast');
+  t.innerHTML = msg;
+  t.style.background = type === 'err' ? '#b91c1c' : 'var(--green-dark)';
+  t.style.display = 'block';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.style.display = 'none', 3000);
+}
+
+// ═══════════════════════════════
+//  PRODUCT FORM VALIDATION
+// ═══════════════════════════════
+function validateAddForm(form) {
+  const name  = form.prodName.value.trim();
+  const price = form.prodPrice.value.trim();
+  if (!name) {
+    showToast('<i class="fa fa-exclamation-circle"></i> Product name is required', 'err');
+    return false;
+  }
+  if (/^\d+$/.test(name)) {
+    showToast('<i class="fa fa-exclamation-circle"></i> Product name cannot be only numbers', 'err');
+    return false;
+  }
+  if (!price || isNaN(parseFloat(price))) {
+    showToast('<i class="fa fa-exclamation-circle"></i> Price must be a valid number', 'err');
+    return false;
+  }
+  return true;
+}
+
+// ═══════════════════════════════
+//  EDIT MODAL
+// ═══════════════════════════════
+function openEditModal(idx, name, price, image) {
+  document.getElementById('editIdx').value   = idx;
+  document.getElementById('editName').value  = name;
+  document.getElementById('editPrice').value = price;
+  const preview = document.getElementById('editImgPreview');
+  preview.innerHTML = image
+    ? `<img src="/static/uploads/${image}" alt="" onerror="this.style.display='none'">`
+    : '';
+  document.getElementById('editModal').classList.add('open');
+  document.getElementById('editName').focus();
+}
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('open');
+}
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('editModal')) closeEditModal();
+});
+
+// ═══════════════════════════════
+//  DAILY PRICES
+// ═══════════════════════════════
+const DEFAULT_ITEMS = [
+  'Carrot','Cucumber','Coriander Leaves','Mint Leaves','Cauliflower','Onion',
+  'Tomato','Brinjal','Potato','Beetroot',
+  'Sunflower Seeds','Chia Seeds','Fennel Seeds','Fenugreek Seeds','Coriander Seeds',
+  'Mustard Seeds','Pumpkin Seeds','Sesame Seeds','Flax Seeds',
+  'Hazelnut','Pista','Walnuts','Dates','Groundnut',
+  'Sunflower Oil','Groundnut Oil','Coconut Oil','Olive Oil','Sesame Oil','Mustard Oil',
+  'Eggs','Chicken','Meat',
+  'Fresh Milk','Curd','Paneer','Rice','Wheat Flour','Toor Dal',
+  'Banana','Apple','Mango',
+  'Bath Soap','Washing Powder','Biscuits','Chips'
+];
+
+let prices = {};
+
+async function loadPrices() {
+  try {
+    const res = await fetch('/api/prices');
+    prices = await res.json();
+  } catch { prices = {}; }
+  DEFAULT_ITEMS.forEach(item => { if (!(item in prices)) prices[item] = ''; });
+  renderPriceTable();
+}
+
+function renderPriceTable() {
+  const tbody = document.getElementById('priceTbody');
+  tbody.innerHTML = '';
+  Object.entries(prices).forEach(([name, val]) => {
+    const key = name.replace(/[^a-zA-Z0-9]/g,'_');
+    const tr  = document.createElement('tr');
+    tr.id = 'pr_' + key;
+    tr.innerHTML = `
+      <td><b>${name}</b></td>
+      <td>
+        <input class="price-input" type="number" min="0"
+               id="pv_${key}" value="${val}" placeholder="Enter ₹">
+      </td>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="btn-save-sm" onclick="savePrice('${name}','${key}')">
+            <i class="fa fa-check"></i> Save
+          </button>
+          <button class="btn-del-sm" onclick="deletePrice('${name}','${key}')">
+            <i class="fa fa-trash"></i>
+          </button>
+          <span class="save-tag" id="st_${key}">✓ Saved</span>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function savePrice(name, key) {
+  const val = document.getElementById('pv_' + key)?.value.trim();
+  if (!val) { showToast('Enter a price first', 'err'); return; }
+  const res  = await fetch('/admin/update_price', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, price: val })
+  });
+  const data = await res.json();
+  if (data.status === 'ok') {
+    prices[name] = val;
+    const tag = document.getElementById('st_' + key);
+    if (tag) { tag.style.display = 'inline'; setTimeout(() => tag.style.display = 'none', 2000); }
+    showToast('✅ ' + name + ' → ₹' + val);
+  }
+}
+
+async function deletePrice(name, key) {
+  if (!confirm('Remove "' + name + '" from price list?')) return;
+  await fetch('/admin/update_price', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, price: '__DELETE__' })
+  });
+  delete prices[name];
+  const row = document.getElementById('pr_' + key);
+  if (row) { row.style.opacity = '0'; row.style.transition = '0.3s'; setTimeout(() => row.remove(), 300); }
+  showToast('🗑 ' + name + ' removed');
+}
+
+async function addPriceItem() {
+  const name = document.getElementById('newPriceName').value.trim();
+  const val  = document.getElementById('newPriceVal').value.trim();
+  if (!name) { showToast('Enter item name', 'err'); return; }
+  if (name in prices) { showToast('"' + name + '" already in list', 'err'); return; }
+  await fetch('/admin/update_price', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, price: val || '' })
+  });
+  prices[name] = val || '';
+  document.getElementById('newPriceName').value = '';
+  document.getElementById('newPriceVal').value  = '';
+  renderPriceTable();
+  showToast('✅ "' + name + '" added');
+}
+
+// ═══════════════════════════════
+//  AI SETTINGS
+// ═══════════════════════════════
+async function loadAIStatus() {
+  try {
+    const res  = await fetch('/api/ai_status');
+    const data = await res.json();
+    const banner  = document.getElementById('aiBanner');
+    const statVal = document.getElementById('aiStatVal');
+    if (data.configured) {
+      banner.className   = 'ai-banner ai-banner-ok';
+      banner.innerHTML   = '<i class="fa fa-circle-check"></i> Gemini AI is configured and ready!';
+      if (statVal) statVal.textContent = 'Ready';
+      if (data.key_preview) {
+        document.getElementById('keyPreviewHint').textContent = 'Current key: ' + data.key_preview;
+      }
+    } else {
+      banner.className = 'ai-banner ai-banner-warn';
+      banner.innerHTML = '<i class="fa fa-triangle-exclamation"></i> Gemini API key not set. AI features are disabled.';
+      if (statVal) statVal.textContent = 'Offline';
+    }
+  } catch(e) {}
+}
+
+async function saveGeminiKey() {
+  const key = document.getElementById('geminiKeyInput').value.trim();
+  const btn = document.getElementById('saveKeyBtn');
+  const res_el = document.getElementById('keyTestResult');
+  if (!key) { showToast('Enter an API key first', 'err'); return; }
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;"></span> Verifying...';
+  try {
+    const res  = await fetch('/admin/save_gemini_key', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+    const data = await res.json();
+    res_el.style.display  = 'block';
+    res_el.style.background = data.status === 'ok' ? '#f0fdf4' : '#fef2f2';
+    res_el.style.border     = '1px solid ' + (data.status === 'ok' ? '#86efac' : '#fca5a5');
+    res_el.style.color      = data.status === 'ok' ? '#15803d' : '#b91c1c';
+    res_el.textContent      = data.msg;
+    if (data.status === 'ok') {
+      document.getElementById('geminiKeyInput').value = '';
+      loadAIStatus();
+      showToast('✅ AI is ready!');
+    } else { showToast(data.msg, 'err'); }
+  } catch(e) { showToast('Network error', 'err'); }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa fa-save"></i> Save & Verify';
+}
+
+function toggleKeyVisibility() {
+  const inp  = document.getElementById('geminiKeyInput');
+  const icon = document.getElementById('eyeIcon');
+  if (inp.type === 'password') {
+    inp.type = 'text'; icon.className = 'fa fa-eye-slash';
+  } else {
+    inp.type = 'password'; icon.className = 'fa fa-eye';
+  }
+}
+
+// Load AI status on initial load for stat card
+loadAIStatus();
+
+// Auto-show error/success tab if query param present
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('err') || params.get('success')) {
+    switchTab('products', document.querySelector('.nav-item'));
+  }
+});
+</script>
+</body>
+</html>

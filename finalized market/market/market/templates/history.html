@@ -1,0 +1,163 @@
+{% extends "layout.html" %}
+{% block title %}Order History{% endblock %}
+
+{% block extra_css %}
+<style>
+.hist-page { max-width: 900px; margin: 36px auto; padding: 0 5% 60px; }
+.hist-title { font-size: 2.6rem; font-weight: 800; color: var(--green-dark); margin-bottom: 6px; display:flex;align-items:center;gap:10px; }
+.hist-sub   { font-size: 1.4rem; color: var(--text-light); margin-bottom: 24px; }
+
+.stats-bar {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  background: #fff; border-radius: 14px;
+  padding: 20px 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  margin-bottom: 24px;
+}
+.hist-stat .val { font-size: 2.4rem; font-weight: 800; color: var(--green-dark); }
+.hist-stat .lbl { font-size: 1.2rem; color: var(--text-light); }
+
+.search-bar-hist {
+  display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+}
+.search-bar-hist input {
+  flex: 1; min-width: 220px;
+  padding: 11px 16px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-size: 1.4rem; outline: none;
+}
+.search-bar-hist input:focus { border-color: var(--green); }
+.btn-clear-hist {
+  background: #fef2f2; color: #b91c1c;
+  border: 1px solid #fca5a5;
+  padding: 10px 20px; border-radius: 10px;
+  font-size: 1.3rem; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+}
+.btn-clear-hist:hover { background: #ef4444; color: #fff; }
+
+.order-card {
+  background: #fff; border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  margin-bottom: 16px; overflow: hidden;
+  border: 1.5px solid transparent; transition: border-color 0.2s;
+}
+.order-card:hover { border-color: var(--green); }
+.order-card-head {
+  background: var(--green-light);
+  padding: 12px 20px;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 6px;
+}
+.order-num  { font-size: 1.4rem; font-weight: 800; color: var(--green-dark); display:flex;align-items:center;gap:7px; }
+.order-date { font-size: 1.2rem; color: var(--text-light); }
+.order-card-body { padding: 16px 20px; display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.order-thumb {
+  width: 80px; height: 80px; object-fit: cover;
+  border-radius: 10px; flex-shrink: 0;
+  background: var(--green-light);
+}
+.order-info { flex: 1; min-width: 200px; }
+.order-info h3 { font-size: 1.6rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.order-info p  { font-size: 1.3rem; color: var(--text-light); margin: 3px 0; }
+.order-total {
+  font-size: 2rem; font-weight: 800; color: var(--green-dark);
+  background: var(--green-light); padding: 8px 16px;
+  border-radius: 10px; align-self: center; white-space: nowrap;
+}
+.cod-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fefce8; color: #854d0e;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 1.2rem; font-weight: 700; margin-top: 6px;
+}
+
+.empty-hist {
+  text-align: center; padding: 60px; color: #aaa;
+}
+.empty-hist i { font-size: 5rem; display: block; margin-bottom: 16px; }
+.empty-hist p { font-size: 1.5rem; margin-bottom: 16px; }
+.empty-hist a { color: var(--green); font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hist-page">
+  <div class="hist-title"><i class="fa fa-clock-rotate-left" style="color:var(--green);"></i> Order History</div>
+  <p class="hist-sub">All your past orders — stored on this device.</p>
+
+  <div class="stats-bar" id="statsBar">
+    <div class="hist-stat"><div class="val" id="statOrders">0</div><div class="lbl">Total Orders</div></div>
+    <div class="hist-stat"><div class="val" id="statSpent">₹0</div><div class="lbl">Total Spent</div></div>
+    <div class="hist-stat"><div class="val" id="statLast">—</div><div class="lbl">Last Order</div></div>
+  </div>
+
+  <div class="search-bar-hist">
+    <input type="text" id="histSearch" placeholder="Search by product or phone..."
+           oninput="renderHistory()">
+    <button class="btn-clear-hist" onclick="clearAllHistory()">
+      <i class="fa fa-trash"></i> Clear All
+    </button>
+  </div>
+
+  <div id="histList"></div>
+</div>
+
+<script>
+function renderHistory() {
+  const list  = document.getElementById('histList');
+  const query = document.getElementById('histSearch').value.toLowerCase();
+  let orders  = JSON.parse(localStorage.getItem('orderHistory')||'[]');
+
+  // Stats (full)
+  document.getElementById('statOrders').textContent = orders.length;
+  document.getElementById('statSpent').textContent  = '₹' + orders.reduce((s,o)=>s+parseFloat(o.price||0),0).toFixed(2);
+  document.getElementById('statLast').textContent   = orders[0]?.date || '—';
+
+  if (query) orders = orders.filter(o =>
+    (o.product||'').toLowerCase().includes(query) ||
+    (o.phone||'').toLowerCase().includes(query) ||
+    (o.name||'').toLowerCase().includes(query)
+  );
+
+  if (!orders.length) {
+    list.innerHTML = `<div class="empty-hist">
+      <i class="fa fa-box-open"></i>
+      <p>${query ? 'No matching orders.' : 'No orders yet.'}</p>
+      ${!query ? '<a href="/">Start Shopping →</a>' : ''}
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = orders.map((o, i) => `
+    <div class="order-card">
+      <div class="order-card-head">
+        <span class="order-num"><i class="fa fa-receipt"></i> Order #${orders.length - i}</span>
+        <span class="order-date"><i class="fa fa-calendar"></i> ${o.date || '—'}</span>
+      </div>
+      <div class="order-card-body">
+        <img class="order-thumb" src="${o.image||''}" alt=""
+             onerror="this.style.display='none'">
+        <div class="order-info">
+          <h3>${o.product || '—'}</h3>
+          <p><b>Weight/Count:</b> ${o.weight||'—'} &nbsp;|&nbsp; <b>Qty:</b> ${o.quantity||'—'}</p>
+          <p><b>Name:</b> ${o.name}</p>
+          ${o.phone   ? `<p><b>Phone:</b> ${o.phone}</p>`   : ''}
+          ${o.address ? `<p><b>Address:</b> ${o.address}</p>` : ''}
+          ${o.note && o.note!=='-' ? `<p><b>Note:</b> ${o.note}</p>` : ''}
+          <span class="cod-badge"><i class="fa fa-money-bill-wave"></i> Cash on Delivery</span>
+        </div>
+        <div class="order-total">₹${parseFloat(o.price||0).toFixed(2)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function clearAllHistory() {
+  if (!confirm('Clear all order history? This cannot be undone.')) return;
+  localStorage.removeItem('orderHistory');
+  renderHistory();
+}
+
+renderHistory();
+</script>
+{% endblock %}

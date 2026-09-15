@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% block title %}Oil Items{% endblock %}
+
+{% block content %}
+<div class="cat-hero">
+  <div class="cat-hero-text">
+    <h1>Pure <span>Oils</span></h1>
+    <p>Cold-pressed, naturally extracted oils for healthy cooking.</p>
+    <span class="cat-hero-badge"><i class="fa fa-droplet"></i> Pure &amp; Natural</span>
+  </div>
+  <img class="cat-hero-img" src="{{ url_for('static', filename='images/6.jpeg') }}" alt="Oils">
+</div>
+
+<div class="cat-toolbar">
+  <button class="cat-filter-btn active" onclick="filterItems('all',this)"><i class="fa fa-border-all"></i> All</button>
+  <button class="cat-filter-btn" onclick="filterItems('cooking',this)">Cooking Oil</button>
+  <button class="cat-filter-btn" onclick="filterItems('premium',this)">Premium</button>
+  <span class="cat-result-count" id="resultCount"></span>
+</div>
+
+<div class="cat-grid">
+  {% set items = [
+    {"name":"Sunflower Oil",  "price":"300","unit":"per litre","img":"/static/images/oil/1.jpg", "cat":"cooking"},
+    {"name":"Groundnut Oil",  "price":"499","unit":"per litre","img":"/static/images/oil/2.jpg", "cat":"cooking"},
+    {"name":"Coconut Oil",    "price":"499","unit":"per litre","img":"/static/images/oil/3.jpg", "cat":"cooking"},
+    {"name":"Olive Oil",      "price":"799","unit":"500ml",    "img":"/static/images/oil/5.jpg", "cat":"premium"},
+    {"name":"Sesame Oil",     "price":"499","unit":"per litre","img":"/static/images/oil/7.jpg", "cat":"premium"},
+    {"name":"Mustard Oil",    "price":"299","unit":"per litre","img":"/static/images/oil/6.jpg", "cat":"cooking"},
+  ] %}
+  {% for item in items %}
+  <div class="pcard" data-cat="{{ item.cat }}">
+    <div class="pcard-img-wrap">
+      <img src="{{ item.img }}" alt="{{ item.name }}"
+           onerror="this.src='/static/images/6.jpeg'">
+      <span class="pcard-badge">{{ item.cat|capitalize }}</span>
+    </div>
+    <div class="pcard-body">
+      <div class="pcard-name">{{ item.name }}</div>
+      <div class="pcard-unit">{{ item.unit }}</div>
+      <div class="pcard-price" data-item="{{ item.name }}">₹{{ item.price }}</div>
+      <div class="pcard-qty"><label>Qty:</label>
+        <div class="qty-ctrl">
+          <button type="button" onclick="changeQty(this,-1)">−</button>
+          <input type="number" value="1" min="1" class="qty-input">
+          <button type="button" onclick="changeQty(this,1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="pcard-actions">
+      <button class="pcard-btn-cart add-cart-btn" data-name="{{ item.name }}" data-price="{{ item.price }}" data-image="{{ item.img }}"><i class="fa fa-cart-plus"></i> Add</button>
+      <button class="pcard-btn-order order-btn" data-name="{{ item.name }}" data-price="{{ item.price }}" data-image="{{ item.img }}">Order</button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changeQty(btn,delta){const i=btn.parentElement.querySelector('input');i.value=Math.max(1,parseInt(i.value||1)+delta);}
+function filterItems(cat,btn){document.querySelectorAll('.cat-filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');let c=0;document.querySelectorAll('.pcard').forEach(card=>{const s=cat==='all'||card.dataset.cat===cat;card.style.display=s?'':'none';if(s)c++;});document.getElementById('resultCount').textContent=c+' products';}
+window.addEventListener('DOMContentLoaded',()=>{document.getElementById('resultCount').textContent=document.querySelectorAll('.pcard').length+' products';});
+</script>
+{% endblock %}

@@ -1,0 +1,307 @@
+{% extends "layout.html" %}
+{% block title %}Your Cart{% endblock %}
+
+{% block extra_css %}
+<style>
+.cart-page { max-width: 1000px; margin: 36px auto; padding: 0 5% 60px; }
+.cart-title { font-size: 2.6rem; font-weight: 800; color: var(--green-dark); margin-bottom: 24px; display:flex;align-items:center;gap:10px; }
+
+.cart-empty {
+  text-align:center; padding:60px 20px; color:#aaa;
+}
+.cart-empty i { font-size:6rem; display:block; margin-bottom:16px; }
+.cart-empty p { font-size:1.6rem; margin-bottom:20px; }
+.cart-empty a {
+  background:var(--green); color:#fff;
+  padding:12px 28px; border-radius:25px;
+  font-size:1.5rem; font-weight:700;
+  text-decoration:none; display:inline-flex;
+  align-items:center; gap:8px;
+}
+
+.cart-row {
+  display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start;
+}
+.cart-items-col { flex:1; min-width:260px; }
+.cart-item-card {
+  background:#fff; border-radius:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.07);
+  padding:16px; display:flex; gap:16px;
+  align-items:center; margin-bottom:14px;
+  border:1.5px solid transparent;
+  transition:border-color 0.2s;
+}
+.cart-item-card:hover { border-color: var(--green); }
+.cart-item-img {
+  width:80px; height:80px;
+  object-fit:cover; border-radius:10px;
+  flex-shrink:0; background:var(--green-light);
+}
+.cart-item-info { flex:1; }
+.cart-item-name { font-size:1.6rem; font-weight:700; color:var(--text); }
+.cart-item-price { font-size:1.8rem; font-weight:800; color:var(--green-dark); margin:4px 0; }
+.cart-qty-row { display:flex; align-items:center; gap:10px; margin-top:6px; }
+.cart-qty-ctrl {
+  display:flex; align-items:center;
+  border:1.5px solid var(--border); border-radius:8px; overflow:hidden;
+}
+.cart-qty-ctrl button {
+  width:30px; height:30px;
+  background:var(--green-light); border:none;
+  font-size:1.6rem; color:var(--green-dark);
+  cursor:pointer;
+}
+.cart-qty-ctrl button:hover { background:var(--green); color:#fff; }
+.cart-qty-ctrl input {
+  width:40px; border:none; text-align:center;
+  font-size:1.4rem; font-weight:700; outline:none;
+}
+.cart-item-total { font-size:1.5rem; color:var(--text-light); }
+.btn-remove {
+  background:#fef2f2; color:#b91c1c;
+  border:1px solid #fca5a5; padding:7px 12px;
+  border-radius:8px; cursor:pointer; font-size:1.3rem;
+  display:flex; align-items:center; gap:5px;
+  transition:0.2s; white-space:nowrap;
+}
+.btn-remove:hover { background:#ef4444; color:#fff; }
+
+/* Summary */
+.cart-summary {
+  width:300px; flex-shrink:0;
+  background:#fff; border-radius:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.07);
+  padding:24px; position:sticky; top:90px;
+}
+.summary-title { font-size:1.8rem; font-weight:800; color:var(--green-dark); margin-bottom:18px; }
+.summary-row {
+  display:flex; justify-content:space-between;
+  font-size:1.4rem; margin-bottom:10px; color:var(--text);
+}
+.summary-row.total {
+  font-size:1.8rem; font-weight:800; color:var(--green-dark);
+  border-top:2px solid var(--border); padding-top:12px; margin-top:4px;
+}
+.btn-checkout {
+  width:100%; background:var(--green); color:#fff;
+  border:none; padding:14px; border-radius:10px;
+  font-size:1.6rem; font-weight:700; cursor:pointer;
+  margin-top:16px; display:flex; align-items:center;
+  justify-content:center; gap:8px; transition:0.2s;
+}
+.btn-checkout:hover { background:var(--green-dark); transform:translateY(-1px); }
+.btn-continue {
+  width:100%; background:#fff; color:var(--green);
+  border:2px solid var(--green); padding:11px; border-radius:10px;
+  font-size:1.5rem; font-weight:700; cursor:pointer;
+  margin-top:10px; text-align:center; display:block;
+  text-decoration:none; transition:0.2s;
+}
+.btn-continue:hover { background:var(--green); color:#fff; }
+
+@media(max-width:768px) {
+  .cart-summary { width:100%; position:static; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-page">
+  <div class="cart-title">
+    <i class="fa fa-cart-shopping" style="color:var(--green);"></i>
+    Your Shopping Cart
+  </div>
+
+  <div id="cartPageContent"></div>
+</div>
+
+<script>
+function renderCartPage() {
+  const raw   = JSON.parse(localStorage.getItem('cart') || '[]');
+  const cart  = raw.map(i => ({
+    name:  i.name,
+    price: parseFloat(i.price),
+    image: i.image,
+    qty:   i.qty ?? i.quantity ?? 1
+  }));
+  const el    = document.getElementById('cartPageContent');
+
+  if (cart.length === 0) {
+    el.innerHTML = `
+      <div class="cart-empty">
+        <i class="fa fa-cart-shopping"></i>
+        <p>Your cart is empty!</p>
+        <a href="/"><i class="fa fa-store"></i> Continue Shopping</a>
+      </div>`;
+    return;
+  }
+
+  let subtotal = 0;
+  const itemsHtml = cart.map((item, idx) => {
+    const lineTotal = item.price * item.qty;
+    subtotal += lineTotal;
+    return `
+    <div class="cart-item-card" id="ci_${idx}">
+      <img class="cart-item-img" src="${item.image}" alt="${item.name}"
+           onerror="this.src='/static/images/1.jpeg'">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-price">₹${item.price.toFixed(2)}</div>
+        <div class="cart-qty-row">
+          <div class="cart-qty-ctrl">
+            <button onclick="updateQty(${idx},-1)">−</button>
+            <input type="number" value="${item.qty}" min="1"
+                   onchange="setQty(${idx},this.value)">
+            <button onclick="updateQty(${idx},1)">+</button>
+          </div>
+          <span class="cart-item-total">= ₹${lineTotal.toFixed(2)}</span>
+        </div>
+      </div>
+      <button class="btn-remove" onclick="removeItem(${idx})">
+        <i class="fa fa-trash"></i> Remove
+      </button>
+    </div>`;
+  }).join('');
+
+  const delivery = subtotal >= 499 ? 0 : 40;
+  const total    = subtotal + delivery;
+
+  el.innerHTML = `
+    <div class="cart-row">
+      <div class="cart-items-col">${itemsHtml}</div>
+      <div class="cart-summary">
+        <div class="summary-title">Order Summary</div>
+        <div class="summary-row"><span>Subtotal (${cart.length} items)</span><span>₹${subtotal.toFixed(2)}</span></div>
+        <div class="summary-row"><span>Delivery</span><span>${delivery === 0 ? '<span style="color:var(--green);font-weight:700;">FREE</span>' : '₹' + delivery}</span></div>
+        ${delivery > 0 ? `<div style="font-size:1.2rem;color:var(--green);margin-bottom:8px;">Add ₹${(499-subtotal).toFixed(2)} more for free delivery!</div>` : ''}
+        <div class="summary-row total"><span>Total</span><span>₹${total.toFixed(2)}</span></div>
+        <div style="background:var(--green-light);border-radius:8px;padding:10px;font-size:1.3rem;color:var(--green-dark);margin-top:12px;text-align:center;">
+          <i class="fa fa-money-bill-wave"></i> Cash on Delivery
+        </div>
+        <button class="btn-checkout" onclick="showOrderForm(${total.toFixed(2)}, cart)">
+          <i class="fa fa-bag-shopping"></i> Place Order
+        </button>
+        <a href="/" class="btn-continue"><i class="fa fa-arrow-left"></i> Continue Shopping</a>
+      </div>
+    </div>`;
+}
+
+function saveCart(cart) {
+  localStorage.setItem('cart', JSON.stringify(cart));
+  renderCartPage();
+}
+
+function updateQty(idx, delta) {
+  const cart = JSON.parse(localStorage.getItem('cart')||'[]');
+  cart[idx].qty = Math.max(1, (cart[idx].qty || 1) + delta);
+  saveCart(cart);
+}
+
+function setQty(idx, val) {
+  const cart = JSON.parse(localStorage.getItem('cart')||'[]');
+  cart[idx].qty = Math.max(1, parseInt(val) || 1);
+  saveCart(cart);
+}
+
+function removeItem(idx) {
+  const cart = JSON.parse(localStorage.getItem('cart')||'[]');
+  cart.splice(idx, 1);
+  saveCart(cart);
+}
+
+// Show order details form before confirming
+function showOrderForm(total, cartItems) {
+  // Remove existing modal if any
+  const existing = document.getElementById('orderFormModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'orderFormModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:18px;padding:28px;width:100%;max-width:460px;
+                box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
+      <h2 style="font-size:2rem;font-weight:800;color:var(--green-dark);margin-bottom:20px;
+                 display:flex;align-items:center;gap:8px;">
+        <i class="fa fa-user"></i> Delivery Details
+      </h2>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <input id="oName"    type="text"  placeholder="Full Name *"
+          style="padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:1.4rem;outline:none;"
+          onfocus="this.style.borderColor='#1a7a4a'" onblur="this.style.borderColor='#ddd'" required>
+        <input id="oPhone"   type="tel"   placeholder="Phone Number *"
+          style="padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:1.4rem;outline:none;"
+          onfocus="this.style.borderColor='#1a7a4a'" onblur="this.style.borderColor='#ddd'" required>
+        <textarea id="oAddress" rows="2"  placeholder="Delivery Address * (Door No, Street, City)"
+          style="padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:1.4rem;outline:none;resize:none;"
+          onfocus="this.style.borderColor='#1a7a4a'" onblur="this.style.borderColor='#ddd'" required></textarea>
+        <input id="oEmail"   type="email" placeholder="Email (optional)"
+          style="padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:1.4rem;outline:none;"
+          onfocus="this.style.borderColor='#1a7a4a'" onblur="this.style.borderColor='#ddd'">
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px;
+                    font-size:1.4rem;color:#15803d;display:flex;align-items:center;gap:8px;">
+          <i class="fa fa-money-bill-wave"></i> Cash on Delivery
+          <b style="margin-left:auto;">₹${total}</b>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px;">
+        <button onclick="confirmCartOrder(${total})"
+          style="flex:2;background:#1a7a4a;color:#fff;border:none;padding:14px;
+                 border-radius:10px;font-size:1.5rem;font-weight:700;cursor:pointer;">
+          <i class="fa fa-check"></i> Confirm Order
+        </button>
+        <button onclick="document.getElementById('orderFormModal').remove()"
+          style="flex:1;background:#f0f4f8;color:#555;border:none;padding:14px;
+                 border-radius:10px;font-size:1.5rem;font-weight:700;cursor:pointer;">
+          Cancel
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('oName').focus();
+}
+
+function confirmCartOrder(total) {
+  const name    = document.getElementById('oName').value.trim();
+  const phone   = document.getElementById('oPhone').value.trim();
+  const address = document.getElementById('oAddress').value.trim();
+  const email   = document.getElementById('oEmail').value.trim();
+
+  if (!name)    { document.getElementById('oName').style.borderColor='#ef4444';    document.getElementById('oName').focus();    return; }
+  if (!phone)   { document.getElementById('oPhone').style.borderColor='#ef4444';   document.getElementById('oPhone').focus();   return; }
+  if (!address) { document.getElementById('oAddress').style.borderColor='#ef4444'; document.getElementById('oAddress').focus(); return; }
+
+  const cart = JSON.parse(localStorage.getItem('cart')||'[]');
+  const order = {
+    product:  cart.map(i=>i.name).join(', '),
+    quantity: cart.reduce((s,i)=>s+i.qty, 0),
+    weight:   'Multiple items',
+    payment:  'Cash on Delivery',
+    price:    total,
+    name,
+    phone,
+    address,
+    email:    email || '-',
+    note:     '-',
+    date:     new Date().toLocaleString('en-IN')
+  };
+
+  // Save to history
+  const hist = JSON.parse(localStorage.getItem('orderHistory')||'[]');
+  hist.unshift(order);
+  localStorage.setItem('orderHistory', JSON.stringify(hist));
+
+  // Send to backend
+  fetch('/place_order', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(order)
+  }).catch(()=>{});
+
+  localStorage.setItem('cart','[]');
+  window.location.href = '/order_success';
+}
+
+renderCartPage();
+</script>
+{% endblock %}
